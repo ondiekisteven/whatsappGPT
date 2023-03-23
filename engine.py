@@ -85,7 +85,7 @@ def generate_response(chat_history: List[Dict], current_prompt: str):
     return response['choices'][0]['message']['content']
 
 
-def handle_prompt(msisdn, text):
+def handle_prompt(msisdn, text, client_id):
     try:
         response = generate_response(get_history(msisdn), text)
         logger.info(f'response: {response}')
@@ -99,5 +99,5 @@ def handle_prompt(msisdn, text):
         ]
 
         save_messages(new_msgs)
-        high.enqueue(wa.send_message, args=(msisdn, response))
+        high.enqueue(Whatsapp.send_message_base, args=(client_id, msisdn, response))
         return response

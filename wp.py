@@ -28,6 +28,25 @@ class Whatsapp:
         logger.error(f'{r.status_code} -> {r.text}')
         return None
 
+    @staticmethod
+    def send_message_base(client_id, chat_id, message):
+        headers = {
+            'auth-key': os.getenv('API_AUTH_KEY'),
+            'client_id': client_id
+        }
+
+        payload = {
+            "chat_id": chat_id,
+            "message": message,
+            "type": "chat"
+        }
+        r = requests.post(os.getenv('WEBAPI_URL'), headers=headers, json=payload)
+        if r.status_code == 200:
+            logger.info(f"200 -> {r.text}")
+
+        logger.error(f'{r.status_code} -> {r.text}')
+        return None
+
     def login(self):
         payload = {
             'username': self.username,

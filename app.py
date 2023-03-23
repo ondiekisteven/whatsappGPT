@@ -24,5 +24,5 @@ def index():
             return jsonify({'message': 'not handling groups'})
 
         msisdn = from_.split('@')[0]
-        q.enqueue(handle_prompt, kwargs={'msisdn': msisdn, 'text': body})
+        q.enqueue(handle_prompt, kwargs={'msisdn': msisdn, 'text': body, 'client_id': body.get('client_id')})
     return {'message': 'success'}
