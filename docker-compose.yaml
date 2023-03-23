@@ -8,7 +8,9 @@ services:
       context: .
       dockerfile: Dockerfile
 
-    command: gunicorn app:app --bind 0.0.0.0:5000 --workers 2 --access-logfile /app/logs/chatgpt.log
+    #command: gunicorn app:app --bind 0.0.0.0:5000 --workers 2 --access-logfile /app/logs/chatgpt.log
+    command: flask run --host=0.0.0.0 --port=5000
+
     ports:
       - "5009:5000"
     restart: always
@@ -16,8 +18,6 @@ services:
       - .env
     volumes:
     - ./logs/:/app/logs/
-    logging:
-      driver: local
     networks:
       - whatsapp-network
 
