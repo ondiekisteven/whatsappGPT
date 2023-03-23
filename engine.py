@@ -44,6 +44,7 @@ def get_messages(session_id):
 
 
 def save_messages(msg_objs: list):
+    logger.info(f"saving : {msg_objs}")
     db = get_db()
     try:
         db.execute(messages.insert(), msg_objs)
@@ -87,6 +88,7 @@ def generate_response(chat_history: List[Dict], current_prompt: str):
 def handle_prompt(msisdn, text):
     try:
         response = generate_response(get_history(msisdn), text)
+        logger.info(f'response: {response}')
     except Exception as e:
         logger.error(e)
         return None
