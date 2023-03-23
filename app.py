@@ -1,25 +1,30 @@
 import os
 
 import openai
-from flask import Flask, redirect, render_template, request, url_for
+from flask import Flask, redirect, render_template, request, url_for, jsonify
+from rq import Queue
+
+from engine import r, handle_prompt
 
 app = Flask(__name__)
 openai.api_key = os.getenv("OPENAI_API_KEY")
+q = Queue('default', connection=r)
 
 
 @app.route("/", methods=("GET", "POST"))
 def index():
     if request.method == "POST":
-        animal = request.form["animal"]
-        response = openai.Completion.create(
-            model="text-davinci-003",
-            prompt=generate_prompt(animal),
-            temperature=0.6,
-        )
-        return redirect(url_for("index", result=response.choices[0].text))
+        d = request.json
+        from_ = d.get('from') or ''
+        body = d.get('body')
+        if not body or not from_:
+            return jsonify({'error': 'Invalid Content'})
 
-    result = request.args.get("result")
-    return render_template("index.html", result=result)
+        if 'g.us' in from_:
+            return jsonify({'message': 'not handling groups'})
+
+        msisdn = from_.split('@')[0]
+        q.enqueue(handle_prompt, kwargs={'msisdn': msisdn, 'text': body})
 
 
 def generate_prompt(animal):

@@ -1,0 +1,46 @@
+version: "3.7"
+
+
+services:
+
+  chatgpt:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    command: gunicorn app:app --bind 0.0.0.0:5000 --workers 2 --access-logfile /app/logs/chatgpt.log
+    ports:
+      - "5009:5000"
+    restart: always
+    env_file:
+      - .env
+    volumes:
+    - ./logs/:/app/logs/
+    logging:
+      driver: local
+    networks:
+      - whatsapp-network
+
+  default_worker:
+    build:
+        context: .
+        dockerfile: Workers.Dockerfile
+    command: rq worker default
+    env_file:
+      - ./.env
+    networks:
+      - whatsapp-network
+
+  high_worker:
+    build:
+        context: .
+        dockerfile: Workers.Dockerfile
+    command: rq worker high
+    env_file:
+      - ./.env
+    networks:
+      - whatsapp-network
+
+networks:
+  whatsapp-network:
+    external: true
