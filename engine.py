@@ -1,16 +1,16 @@
 import datetime
 import logging.config
+import os
 from typing import List, Dict
 
 import cfg_load
 import openai
-import os
 from redis import Redis
 from rq import Queue
 from sqlalchemy import select
 
 from db import create_db, messages, metadata
-from wp import Whatsapp
+from wp import Whatsapp, send_message_base
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 r = Redis(host=os.getenv('REDIS_HOST', 'localhost'), db=os.getenv('REDIS_DB', 5))
@@ -78,8 +78,8 @@ def get_history(msisdn):
 def generate_response(chat_history: List[Dict], current_prompt: str):
     chat_history.append({'role': 'user', 'content': current_prompt})
     response = openai.ChatCompletion.create(
-      model="gpt-3.5-turbo",
-      messages=chat_history
+        model="gpt-3.5-turbo",
+        messages=chat_history
     )
 
     return response['choices'][0]['message']['content']
@@ -99,5 +99,5 @@ def handle_prompt(msisdn, text, client_id):
         ]
 
         save_messages(new_msgs)
-        high.enqueue(Whatsapp.send_message_base, args=(client_id, msisdn, response))
+        high.enqueue(send_message_base, args=(client_id, msisdn, response))
         return response
