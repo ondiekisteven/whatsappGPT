@@ -61,7 +61,7 @@ def send_message_base(client_id, chat_id, message):
     }
 
     payload = {
-        "chat_id": chat_id,
+        "chat_id": f'{chat_id}@c.us',
         "message": message,
         "type": "chat"
     }
