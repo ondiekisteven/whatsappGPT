@@ -64,7 +64,7 @@ def get_session_id(msisdn):
         sn_id = str(datetime.datetime.now().timestamp())
         r.set(msisdn, sn_id)
 
-    r.expire(msisdn, time=datetime.timedelta(minutes=10))
+    r.expire(msisdn, time=datetime.timedelta(minutes=int(os.getenv('SESSION_LENGTH_SECONDS', '3600'))))
     return sn_id
 
 
