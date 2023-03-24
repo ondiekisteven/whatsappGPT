@@ -89,9 +89,14 @@ def handle_prompt(msisdn, text, client_id):
     try:
         response = generate_response(get_history(msisdn), text)
         logger.info(f'response: {response}')
+        if 'goodbye' in response:
+            sn_id = str(datetime.datetime.now().timestamp())
+            r.set(msisdn, sn_id)
     except Exception as e:
         logger.error(e)
-        return None
+        sn_id = str(datetime.datetime.now().timestamp())
+        r.set(msisdn, sn_id)
+        return 'Hello! How can I assist you today?'
     else:
         new_msgs = [
             {'role': 'user', 'content': text, 'msisdn': msisdn, 'session_id': get_session_id(msisdn)},
