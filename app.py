@@ -1,3 +1,4 @@
+import logging
 import os
 
 import openai
@@ -6,6 +7,7 @@ from rq import Queue
 
 from engine import r, handle_prompt
 
+logger = logging.getLogger(__name__)
 app = Flask(__name__)
 openai.api_key = os.getenv("OPENAI_API_KEY")
 q = Queue('default', connection=r)
@@ -17,6 +19,8 @@ def index():
         d = request.json
         from_ = d.get('from') or ''
         body = d.get('body')
+        client_id = d.get('client_id')
+        logger.info(f"request: from -> {from_}, body -> {body} -> client_id -> {client_id}")
         if not body or not from_:
             return jsonify({'error': 'Invalid Content'})
 
@@ -24,5 +28,6 @@ def index():
             return jsonify({'message': 'not handling groups'})
 
         msisdn = from_.split('@')[0]
-        q.enqueue(handle_prompt, kwargs={'msisdn': msisdn, 'text': body, 'client_id': d.get('client_id')})
+        kwargs = {'msisdn': msisdn, 'text': body, 'client_id': client_id}
+        q.enqueue(handle_prompt, kwargs=kwargs)
     return {'message': 'success'}
