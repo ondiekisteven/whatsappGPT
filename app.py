@@ -1,5 +1,6 @@
 import logging
 import os
+from datetime import datetime
 
 import openai
 from flask import Flask, redirect, render_template, request, url_for, jsonify
@@ -29,5 +30,10 @@ def index():
 
         msisdn = from_.split('@')[0]
         kwargs = {'msisdn': msisdn, 'text': body, 'client_id': client_id}
+        if body.upper() == 'STOP':
+            sn_id = str(datetime.now().timestamp())
+            r.set(msisdn, sn_id)
+            return {'message': 'stopped'}
+
         q.enqueue(handle_prompt, kwargs=kwargs)
     return {'message': 'success'}
