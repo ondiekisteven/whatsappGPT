@@ -57,19 +57,20 @@ def save_messages(msg_objs: list):
         db.close()
 
 
-def get_session_id(msisdn):
-    sn_id = r.get(msisdn)
+def get_session_id(client_id, msisdn):
+    rk = f'{client_id}:{msisdn}'
+    sn_id = r.get(rk)
     if not sn_id:
-        logger.info(f'{msisdn} has no active session id, creating one...')
+        logger.info(f'{rk} has no active session id, creating one...')
         sn_id = str(datetime.datetime.now().timestamp())
-        r.set(msisdn, sn_id)
+        r.set(rk, sn_id)
 
-    r.expire(msisdn, time=datetime.timedelta(minutes=int(os.getenv('SESSION_LENGTH_SECONDS', '3600'))))
+    r.expire(rk, time=datetime.timedelta(minutes=int(os.getenv('SESSION_LENGTH_SECONDS', '3600'))))
     return sn_id
 
 
-def get_history(msisdn):
-    session_id = get_session_id(msisdn)
+def get_history(client_id, msisdn):
+    session_id = get_session_id(client_id, msisdn)
     history = get_messages(session_id)
 
     return [{'role': msg[3], 'content': msg[4]} for msg in history]
@@ -86,21 +87,22 @@ def generate_response(chat_history: List[Dict], current_prompt: str):
 
 
 def handle_prompt(msisdn, text, client_id):
+    rk = f'{client_id}:{msisdn}'
     try:
-        response = generate_response(get_history(msisdn), text)
+        response = generate_response(get_history(client_id, msisdn), text)
         logger.info(f'response: {response}')
         if 'goodbye' in response:
             sn_id = str(datetime.datetime.now().timestamp())
-            r.set(msisdn, sn_id)
+            r.set(rk, sn_id)
     except Exception as e:
         logger.error(e)
         sn_id = str(datetime.datetime.now().timestamp())
-        r.set(msisdn, sn_id)
+        r.set(rk, sn_id)
         return 'Hello! How can I assist you today?'
     else:
         new_msgs = [
-            {'role': 'user', 'content': text, 'msisdn': msisdn, 'session_id': get_session_id(msisdn)},
-            {'role': 'system', 'content': response, 'msisdn': msisdn, 'session_id': get_session_id(msisdn)},
+            {'role': 'user', 'content': text, 'msisdn': msisdn, 'session_id': get_session_id(client_id, msisdn)},
+            {'role': 'system', 'content': response, 'msisdn': msisdn, 'session_id': get_session_id(client_id, msisdn)},
         ]
 
         save_messages(new_msgs)
