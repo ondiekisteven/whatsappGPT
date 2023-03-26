@@ -105,6 +105,6 @@ def handle_prompt(msisdn, text, client_id):
             {'role': 'system', 'content': response, 'msisdn': msisdn, 'session_id': get_session_id(client_id, msisdn)},
         ]
 
-        save_messages(new_msgs)
         high.enqueue(send_message_base, args=(client_id, msisdn, response))
+        save_messages(new_msgs)
         return response
