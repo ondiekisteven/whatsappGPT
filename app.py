@@ -30,10 +30,11 @@ def index():
 
         msisdn = from_.split('@')[0]
         kwargs = {'msisdn': msisdn, 'text': body, 'client_id': client_id}
-        if body.upper() == 'STOP':
+        if body.upper() in ['STOP', 'HI']:
             sn_id = str(datetime.now().timestamp())
-            r.set(msisdn, sn_id)
-            return {'message': 'stopped'}
+            r.set(f'{client_id}:{msisdn}', sn_id)
+            if body.upper() == 'STOP':
+                return {'message': 'stopped'}
 
         q.enqueue(handle_prompt, kwargs=kwargs)
     return {'message': 'success'}
