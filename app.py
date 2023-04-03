@@ -14,6 +14,11 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 q = Queue('default', connection=r)
 
 
+@app.route('/test', methods=['GET'])
+def test():
+    return {'message': 'success'}
+
+
 @app.route("/", methods=("GET", "POST"))
 def index():
     if request.method == "POST":
