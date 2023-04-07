@@ -13,7 +13,7 @@ from sqlalchemy import select
 from db import create_db, messages, metadata
 from wp import Whatsapp, send_message_base
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# openai.api_key = os.getenv("OPENAI_API_KEY")
 r_host = os.getenv('REDIS_HOST', 'localhost')
 r = Redis(host=r_host, db=os.getenv('REDIS_DB', 5))
 logging.config.fileConfig('logging.conf', disable_existing_loggers=False)
@@ -79,7 +79,8 @@ def get_history(client_id, msisdn):
 
 
 def get_api_key():
-    key = random.choice(confg.get('keys'))
+    conf = cfg_load.load(config_path)
+    key = random.choice(conf.get('keys'))
     if not key:
         logger.error('ERROR: No key was found. ')
         raise NotImplementedError('API Keys were not found on configs')
