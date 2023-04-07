@@ -24,3 +24,11 @@ messages = Table('messages', metadata,
                  Column('content', Text),
                  Column('date_created', DateTime(timezone=True), server_default=func.now()),
                  )
+
+users = Table('mpesa_payments', metadata,
+              Column('id', Integer, primary_key=True),
+              Column('msisdn', String(20)),
+              Column('amount', Integer),
+              Column('trx_id', String(100)),
+              Column('date_created', DateTime(timezone=True), server_default=func.now()),
+              )

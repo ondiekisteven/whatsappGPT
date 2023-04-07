@@ -1,6 +1,7 @@
 import datetime
 import logging.config
 import os
+import random
 from typing import List, Dict
 
 import cfg_load
@@ -13,7 +14,8 @@ from db import create_db, messages, metadata
 from wp import Whatsapp, send_message_base
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
-r = Redis(host=os.getenv('REDIS_HOST', 'localhost'), db=os.getenv('REDIS_DB', 5))
+r_host = os.getenv('REDIS_HOST', 'localhost')
+r = Redis(host=r_host, db=os.getenv('REDIS_DB', 5))
 logging.config.fileConfig('logging.conf', disable_existing_loggers=False)
 
 wa = Whatsapp(os.getenv('API_USERNAME'), os.getenv('API_PASSWORD'))
@@ -65,7 +67,7 @@ def get_session_id(client_id, msisdn):
         sn_id = str(datetime.datetime.now().timestamp())
         r.set(rk, sn_id)
 
-    r.expire(rk, time=datetime.timedelta(minutes=int(os.getenv('SESSION_LENGTH_SECONDS', '3600'))))
+    r.expire(rk, time=datetime.timedelta(minutes=int(os.getenv('SESSION_LENGTH_SECONDS', '10'))))
     return sn_id
 
 
@@ -76,9 +78,19 @@ def get_history(client_id, msisdn):
     return [{'role': msg[3], 'content': msg[4]} for msg in history]
 
 
+def get_api_key():
+    key = random.choice(confg.get('keys'))
+    if not key:
+        logger.error('ERROR: No key was found. ')
+        raise NotImplementedError('API Keys were not found on configs')
+    return key
+
+
 def generate_response(chat_history: List[Dict], current_prompt: str):
+    api_key = get_api_key()
     chat_history.append({'role': 'user', 'content': current_prompt})
     response = openai.ChatCompletion.create(
+        api_key=api_key,
         model="gpt-3.5-turbo",
         messages=chat_history
     )
