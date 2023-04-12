@@ -51,27 +51,29 @@ def add_depleted(msisdn):
 
 
 def check_paid_status(msisdn: str):
-    not_paid = r.hget(NOT_PAID, msisdn)
-    if not_paid is not None:
-        # user is in not_paid list, we return remaining free responses
-        return not_paid
+    paid_expiry = r.hget(PAID, msisdn)
+
+    if paid_expiry:
+        paid_expiry = datetime.datetime.fromtimestamp(float(paid_expiry))
+        if paid_expiry < datetime.datetime.now():
+
+            # user payment has expired,
+            # add to unpaid list,
+            r.hset(NOT_PAID, msisdn, FREE_RESPONSES)
+            # remove from paid list
+            r.hdel(PAID, msisdn)
+            return FREE_RESPONSES
+        else:
+            # user has paid and payment has not expired
+            return -1
     else:
-        paid_expiry = r.hget(PAID, msisdn)
-
-        if paid_expiry:
-            paid_expiry = datetime.datetime.fromtimestamp(float(paid_expiry))
-            if paid_expiry < datetime.datetime.now():
-
-                # user payment has expired,
-                # add to unpaid list,
-                r.hset(NOT_PAID, msisdn, FREE_RESPONSES)
-                # remove from paid list
-                r.hdel(PAID, msisdn)
-                return FREE_RESPONSES
-            else:
-                # user has paid and payment has not expired
-                return -1
+        not_paid = r.hget(NOT_PAID, msisdn)
+        if not_paid is not None:
+            # user is in not_paid list, we return remaining free responses
+            return not_paid
         else:
             # user was not found on paid and unpaid list. add to unpaid for now
             r.hset(NOT_PAID, msisdn, FREE_RESPONSES)
             return FREE_RESPONSES
+
+
