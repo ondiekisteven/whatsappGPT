@@ -10,7 +10,7 @@ import openai
 from constants import DEPLETED_CREDITS_MESSAGE, UPGRADE_AMOUNT, engine, r, config_path, high
 from crud import get_messages, save_messages
 from db import metadata
-from helpers import check_paid_status, add_depleted, get_session_id
+from helpers import check_paid_status, add_depleted, get_session_id, decrement_response_count
 from wp import send_message_base
 
 logger = logging.getLogger(__name__)
@@ -93,7 +93,7 @@ def handle_prompt(msisdn, text, client_id):
             {'role': 'system', 'content': response, 'msisdn': msisdn,
              'session_id': get_session_id(client_id, msisdn), 'client_id': client_id},
         ]
-
+        decrement_response_count(msisdn)
         high.enqueue(send_message_base, args=(client_id, msisdn, response))
         save_messages(new_msgs)
         return response
