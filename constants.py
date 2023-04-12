@@ -22,14 +22,23 @@ logger = logging.getLogger('engine')
 engine = create_db(confg['database'])
 
 DEPLETED_CREDITS_MESSAGE = """
-Your free credits have been depleted for today. 
+*Your free credits have been depleted for today*. 
 
 You can upgrade to unlimited credits for a whole month by making a payment of Ksh. {upgrade_amount}. 
-Reply with /pay to receive an stk push and complete the payment.
+*REPLY WITH THIS MESSAGE TO PAY👇*:  
 
-If you wish to pay using a different number other than {default_number}, send this message /pay phone_number . 
+/pay 
+
+
+*If you wish to pay using a different number other than {default_number}, send this message*
+
+/pay phone_number
+
 For example to pay using 0712345678, send this: 
+
 /pay 0712345678
+
+*You will get free credits tomorrow. Don't forget to come back*
 
 Thanks for using Sonia AI
 """
