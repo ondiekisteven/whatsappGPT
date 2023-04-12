@@ -46,7 +46,7 @@ def generate_response(chat_history: List[Dict], current_prompt: str):
 
 
 def can_get_response(msisdn):
-    credits_count = check_paid_status(msisdn)
+    credits_count = int(check_paid_status(msisdn))
     if credits_count == -1 or credits_count > 0:
         return True
     return False
