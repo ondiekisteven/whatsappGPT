@@ -6,69 +6,15 @@ from typing import List, Dict
 
 import cfg_load
 import openai
-from redis import Redis
-from rq import Queue
-from sqlalchemy import select
 
-from db import create_db, messages, metadata
-from wp import Whatsapp, send_message_base
+from constants import DEPLETED_CREDITS_MESSAGE, UPGRADE_AMOUNT, engine, r, config_path, high
+from crud import get_messages, save_messages
+from db import metadata
+from helpers import check_paid_status, add_depleted, get_session_id
+from wp import send_message_base
 
-# openai.api_key = os.getenv("OPENAI_API_KEY")
-r_host = os.getenv('REDIS_HOST', 'localhost')
-r = Redis(host=r_host, db=os.getenv('REDIS_DB', 5))
-logging.config.fileConfig('logging.conf', disable_existing_loggers=False)
-
-wa = Whatsapp(os.getenv('API_USERNAME'), os.getenv('API_PASSWORD'))
-config_path = os.getenv('CONFIG_FILE', 'config.yaml')
-try:
-    confg = cfg_load.load(config_path)
-except FileNotFoundError:
-    raise NotImplementedError(
-        "You have not specified a config file path. Default config name is 'config.yaml'")
-
-high = Queue('high', connection=r)
-
-logger = logging.getLogger('engine')
-engine = create_db(confg['database'])
+logger = logging.getLogger(__name__)
 metadata.create_all(engine)
-
-
-def get_db():
-    return engine.connect()
-
-
-def get_messages(session_id):
-    db = get_db()
-    stmt = select(messages).where(messages.c.session_id == session_id)
-    result = db.execute(stmt).fetchall()
-    db.close()
-    return result
-
-
-def save_messages(msg_objs: list):
-    logger.info(f"saving : {msg_objs}")
-    db = get_db()
-    try:
-        db.execute(messages.insert(), msg_objs)
-    except Exception as x:
-        logger.exception(x)
-        db.rollback()
-    else:
-        db.commit()
-    finally:
-        db.close()
-
-
-def get_session_id(client_id, msisdn):
-    rk = f'{client_id}:{msisdn}'
-    sn_id = r.get(rk)
-    if not sn_id:
-        logger.info(f'{rk} has no active session id, creating one...')
-        sn_id = str(datetime.datetime.now().timestamp())
-        r.set(rk, sn_id)
-
-    r.expire(rk, time=datetime.timedelta(minutes=int(os.getenv('SESSION_LENGTH_SECONDS', '10'))))
-    return sn_id
 
 
 def get_history(client_id, msisdn):
@@ -99,8 +45,36 @@ def generate_response(chat_history: List[Dict], current_prompt: str):
     return response['choices'][0]['message']['content']
 
 
+def can_get_response(msisdn):
+    credits_count = check_paid_status(msisdn)
+    if credits_count == -1 or credits_count > 0:
+        return True
+    return False
+
+
+def notify_depleted_free_responses(msisdn, client_id):
+    if add_depleted(msisdn):
+        # notify the user that their credits have depleted or expired
+        logger.info(f"user ({msisdn}) Credits have been depleted. Notifying user using client id: {client_id}")
+        content = DEPLETED_CREDITS_MESSAGE.format(default_number=msisdn, upgrade_amount=UPGRADE_AMOUNT)
+        high.enqueue(send_message_base, args=(
+            client_id, msisdn, content))
+        new_msgs = [
+            {'role': 'notification', 'content': content, 'msisdn': msisdn, 'session_id': get_session_id(
+                client_id, msisdn), 'client_id': client_id},
+        ]
+        save_messages(new_msgs)
+        return
+    logger.info(f"user ({msisdn}) Credits have been depleted and has already been notified")
+
+
 def handle_prompt(msisdn, text, client_id):
     rk = f'{client_id}:{msisdn}'
+
+    if not can_get_response(msisdn):
+        notify_depleted_free_responses(msisdn, client_id)
+        return
+
     try:
         response = generate_response(get_history(client_id, msisdn), text)
         logger.info(f'response: {response}')
@@ -114,8 +88,10 @@ def handle_prompt(msisdn, text, client_id):
         return 'Hello! How can I assist you today?'
     else:
         new_msgs = [
-            {'role': 'user', 'content': text, 'msisdn': msisdn, 'session_id': get_session_id(client_id, msisdn)},
-            {'role': 'system', 'content': response, 'msisdn': msisdn, 'session_id': get_session_id(client_id, msisdn)},
+            {'role': 'user', 'content': text, 'msisdn': msisdn,
+             'session_id': get_session_id(client_id, msisdn), 'client_id': client_id},
+            {'role': 'system', 'content': response, 'msisdn': msisdn,
+             'session_id': get_session_id(client_id, msisdn), 'client_id': client_id},
         ]
 
         high.enqueue(send_message_base, args=(client_id, msisdn, response))

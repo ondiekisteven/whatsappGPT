@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime, Text
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime, Text, Boolean
 from sqlalchemy.pool import QueuePool
 from sqlalchemy.sql.functions import func
 
@@ -23,12 +23,34 @@ messages = Table('messages', metadata,
                  Column('role', String(200)),
                  Column('content', Text),
                  Column('date_created', DateTime(timezone=True), server_default=func.now()),
+                 Column('client_id', String(20))
                  )
 
-users = Table('mpesa_payments', metadata,
+payments = Table('mpesa_payments', metadata,
+                 Column('id', Integer, primary_key=True),
+                 Column('msisdn', String(20)),
+                 Column('amount', Integer),
+                 Column('trx_id', String(100), unique=True),
+                 Column('date_created', DateTime(timezone=True), server_default=func.now()),
+                 Column('channel', String(100)),
+                 Column('request_dump', Text)
+                 )
+
+
+users = Table('users', metadata,
               Column('id', Integer, primary_key=True),
-              Column('msisdn', String(20)),
-              Column('amount', Integer),
-              Column('trx_id', String(100)),
-              Column('date_created', DateTime(timezone=True), server_default=func.now()),
+              Column('msisdn', String(20), unique=True),
+              Column('name', String(150)),
+              Column('free', Boolean),
+              Column('last_free_notify', DateTime())
               )
+
+
+stk_waiting = Table('stk_waiting', metadata,
+                    Column('id', Integer, primary_key=True),
+                    Column('msisdn', String(20), index=True),
+                    Column('client_id', String(20)),
+                    Column('amount', Integer),
+                    Column('target', String(20)),
+                    Column('fulfilled', Boolean, default=False)
+                    )
