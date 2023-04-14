@@ -1,6 +1,5 @@
 import datetime
 import logging.config
-import os
 import random
 from typing import List, Dict
 
@@ -20,8 +19,10 @@ metadata.create_all(engine)
 def get_history(client_id, msisdn):
     session_id = get_session_id(client_id, msisdn)
     history = get_messages(session_id)
-
-    return [{'role': msg[3], 'content': msg[4]} for msg in history]
+    system_msg = [{'role': 'system', 'content': 'You are Sonia Bot, an AI assistant developed by Somwaki and Glemison '
+                                                'Developers. You are a helpful assistant'}]
+    history_messages = [{'role': msg[3], 'content': msg[4]} for msg in history]
+    return system_msg + history_messages
 
 
 def get_api_key():
@@ -90,7 +91,7 @@ def handle_prompt(msisdn, text, client_id):
         new_msgs = [
             {'role': 'user', 'content': text, 'msisdn': msisdn,
              'session_id': get_session_id(client_id, msisdn), 'client_id': client_id},
-            {'role': 'system', 'content': response, 'msisdn': msisdn,
+            {'role': 'assistant', 'content': response, 'msisdn': msisdn,
              'session_id': get_session_id(client_id, msisdn), 'client_id': client_id},
         ]
         decrement_response_count(msisdn)
