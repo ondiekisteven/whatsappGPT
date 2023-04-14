@@ -61,8 +61,8 @@ NOT_PAID = 'NOT_PAID'
 PAID = 'PAID'
 DEPLETED = 'DEPLETED_AND_NOTIFIED'
 
-UPGRADE_AMOUNT = int(os.getenv('UPGRADE_AMOUNT'))
-FREE_RESPONSES = int(os.getenv('FREE_RESPONSES'))
+UPGRADE_AMOUNT = int(os.getenv('UPGRADE_AMOUNT', 50))
+FREE_RESPONSES = int(os.getenv('FREE_RESPONSES', 10))
 
 # openai.api_key = os.getenv("OPENAI_API_KEY")
 r_host = os.getenv('REDIS_HOST', 'localhost')
