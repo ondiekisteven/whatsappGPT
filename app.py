@@ -45,7 +45,7 @@ def payment_view():
                 client_id,
                 error_msisdn,
                 get_session_id(client_id, error_msisdn),
-                error_desc
+                f'*An Error Occurred When Processing Your Payment:*: \n\n\n{error_desc}'
             )
             # is not a successful payment
             return {'message': 'success'}
