@@ -97,6 +97,9 @@ def mark_stk_waiting_fulfilled(waiting_id):
         db.execute(stk_waiting.update().where(stk_waiting.c.id == waiting_id).values(fulfilled=True))
     except Exception as x:
         logger.exception(x)
+        db.rollback()
         raise
+    else:
+        db.commit()
     finally:
         db.close()

@@ -29,7 +29,26 @@ def test():
 def payment_view():
     req = request.json
     if isinstance(req, dict) and 'Body' in req and 'stkCallback' in req['Body']:
+        # is tinypesa payment
 
+        if 'CallbackMetadata' not in req['Body']['stkCallback']:
+            error_desc = req['Body']['stkCallback']['ResultDesc']
+            error_msisdn = req['Body']['stkCallback']['Msisdn']
+            error_amount = req['Body']['stkCallback']['Amount']
+            waiting = crud.get_stk_waiting(error_msisdn, error_amount)
+            if waiting:
+                client_id = waiting.client_id
+            else:
+                client_id = os.getenv('DEFAULT_CLIENT_ID')
+
+            send_notification(
+                client_id,
+                error_msisdn,
+                get_session_id(client_id, error_msisdn),
+                error_desc
+            )
+            # is not a successful payment
+            return {'message': 'success'}
         payment = PaymentBase(
             amount=req['Body']["stkCallback"]['Amount'],
             msisdn=req['Body']["stkCallback"]['Msisdn'],
@@ -63,7 +82,7 @@ def payment_view():
             send_notification(
                 client_id,
                 payment.msisdn,
-                get_session_id(waiting.client_id, payment.msisdn),
+                get_session_id(client_id, payment.msisdn),
                 PAYMENT_RECEIVED_MESSAGE.format(
                     amount=payment.amount,
                     msisdn=payment.msisdn,

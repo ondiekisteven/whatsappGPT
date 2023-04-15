@@ -24,7 +24,7 @@ engine = create_db(confg['database'])
 DEPLETED_CREDITS_MESSAGE = """
 *Your free credits have been depleted for today*. 
 
-You can upgrade to unlimited credits for a whole month by making a payment of Ksh. {upgrade_amount}. 
+In order to continue using the bot, you can upgrade to unlimited credits for a whole month by making a payment of Ksh. {upgrade_amount}. 
 *REPLY WITH THIS MESSAGE TO PAY👇*:  
 
 /pay 
@@ -39,6 +39,7 @@ For example to pay using 0712345678, send this:
 /pay 0712345678
 
 *You will get free credits tomorrow. Don't forget to come back*
+
 
 Thanks for using Sonia AI
 """

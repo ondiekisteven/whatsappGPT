@@ -21,7 +21,8 @@ def get_history(client_id, msisdn):
     history = get_messages(session_id)
     system_msg = [{'role': 'system', 'content': 'You are Sonia Bot, an AI assistant developed by Somwaki and Glemison '
                                                 'Developers. You are a helpful assistant'}]
-    history_messages = [{'role': msg[3], 'content': msg[4]} for msg in history]
+    history_messages = [
+        {'role': msg[3], 'content': msg[4]} for msg in history if msg[3] in ['system', 'assistant', 'user']]
     return system_msg + history_messages
 
 
@@ -37,6 +38,7 @@ def get_api_key():
 def generate_response(chat_history: List[Dict], current_prompt: str):
     api_key = get_api_key()
     chat_history.append({'role': 'user', 'content': current_prompt})
+    logger.info(f"Generating response: api_key -> {api_key} history_length -> {len(chat_history)} ...")
     response = openai.ChatCompletion.create(
         api_key=api_key,
         model="gpt-3.5-turbo",

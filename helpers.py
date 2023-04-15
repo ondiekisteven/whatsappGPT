@@ -31,21 +31,27 @@ def get_session_id(client_id, msisdn):
 
 
 def decrement_response_count(msisdn: str):
-    r.hincrby(NOT_PAID, msisdn, -1)
+    if not r.hexists(PAID, msisdn):
+        # decrement remaining credits only if user has not paid
+        r.hincrby(NOT_PAID, msisdn, -1)
 
 
 def add_paid(msisdn, expiry: datetime):
     r.hset(PAID, msisdn, str(expiry.timestamp()))
 
 
-def add_depleted(msisdn):
-    added = r.sadd(DEPLETED, msisdn)
-
+def expire_key_at_midnight(key):
     now = datetime.datetime.now()
 
     # set the key to expire at midnight
     expire_time = datetime.datetime(now.year, now.month, now.day, 23, 59, 59)
-    r.expireat(DEPLETED, when=int(expire_time.timestamp()))
+    r.expireat(key, when=int(expire_time.timestamp()))
+
+
+def add_depleted(msisdn):
+    added = r.sadd(DEPLETED, msisdn)
+
+    expire_key_at_midnight(DEPLETED)
 
     return added
 
@@ -69,6 +75,7 @@ def check_paid_status(msisdn: str):
     else:
         not_paid = r.hget(NOT_PAID, msisdn)
         if not_paid is not None:
+            expire_key_at_midnight(NOT_PAID)
             # user is in not_paid list, we return remaining free responses
             return not_paid
         else:
