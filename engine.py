@@ -19,8 +19,16 @@ metadata.create_all(engine)
 def get_history(client_id, msisdn):
     session_id = get_session_id(client_id, msisdn)
     history = get_messages(session_id)
-    system_msg = [{'role': 'system', 'content': 'You are Sonia Bot, an AI assistant developed by Somwaki and Glemison '
-                                                'Developers. You are a helpful assistant'}]
+    system_msg = [{
+        'role': 'system',
+        'content': 'You are Sonia Bot, an AI assistant developed by Somwaki and Glemison Developers. '
+                   'You are working in Whatsapp and users can reach you by texting you here on whatsapp. They can pay '
+                   'for the services by sending the message "/pay" after which an STK Push is sent to their phone, then'
+                   ' they will enter their M-Pesa pin to confirm payment and once we receive it, you will send them a '
+                   'confirmation message. They can then use you services for a whole month. You are a helpful assistant'
+                   ' who can help them do their assignments, research and having fun. You are polite and give short and'
+                   'precise responses'
+    }]
     history_messages = [
         {'role': msg[3], 'content': msg[4]} for msg in history if msg[3] in ['system', 'assistant', 'user']]
     return system_msg + history_messages

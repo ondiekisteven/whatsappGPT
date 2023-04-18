@@ -21,22 +21,18 @@ logging.config.fileConfig('logging.conf', disable_existing_loggers=False)
 logger = logging.getLogger('engine')
 engine = create_db(confg['database'])
 
-DEPLETED_CREDITS_MESSAGE = """
-*Your free credits have been depleted for today*. 
+DEPLETED_CREDITS_MESSAGE = """*Your free credits have been depleted for today*, but don't worry... 
 
-In order to continue using the bot, you can upgrade to unlimited credits for a whole month by making a payment of Ksh. {upgrade_amount}. 
+With just Ksh. {upgrade_amount}, you can use the bot *For A Whole Month*, and do your research and assignments
+
 *REPLY WITH THIS MESSAGE TO PAY👇*:  
 
 /pay 
 
 
-*If you wish to pay using a different number other than {default_number}, send this message*
+or */pay 07xxxxxxxxxx* to pay using a different number. Remember to enter the phone number 
 
-/pay phone_number
-
-For example to pay using 0712345678, send this: 
-
-/pay 0712345678
+Upgrade now to support our work, and keep using the bot uninterrupted
 
 *You will get free credits tomorrow. Don't forget to come back*
 
