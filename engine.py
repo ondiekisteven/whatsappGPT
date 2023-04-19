@@ -6,7 +6,7 @@ from typing import List, Dict
 import cfg_load
 import openai
 
-from constants import DEPLETED_CREDITS_MESSAGE, UPGRADE_AMOUNT, engine, r, config_path, high
+from constants import DEPLETED_CREDITS_MESSAGE, UPGRADE_AMOUNT, engine, r, config_path, high, BOT_NUMBERS
 from crud import get_messages, save_messages
 from db import metadata
 from helpers import check_paid_status, add_depleted, get_session_id, decrement_response_count
@@ -81,7 +81,9 @@ def notify_depleted_free_responses(msisdn, client_id):
 
 def handle_prompt(msisdn, text, client_id):
     rk = f'{client_id}:{msisdn}'
-
+    if r.hexists(BOT_NUMBERS, msisdn):
+        logger.error('-----------cannot process requests by bots----------')
+        return
     if not can_get_response(msisdn):
         notify_depleted_free_responses(msisdn, client_id)
         return
