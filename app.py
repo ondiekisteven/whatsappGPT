@@ -8,9 +8,9 @@ from flask import Flask, request, jsonify
 from rq import Queue
 
 import crud
-from constants import PAYMENT_RECEIVED_MESSAGE
+from constants import PAYMENT_RECEIVED_MESSAGE, BOT_NUMBERS
 from engine import r, handle_prompt
-from helpers import send_notification, get_session_id, add_paid
+from helpers import send_notification, get_session_id, add_paid, parse_msisdn, add_simulated_msg_id, update_clients
 from pgw import handle_pay_prompt
 from schema import PaymentBase
 
@@ -106,6 +106,7 @@ def payment_view():
 def index():
     if request.method == "POST":
         d = request.json
+        q.enqueue(update_clients, d)
         from_ = d.get('from') or ''
         body = d.get('body')
         client_id = d.get('client_id')
@@ -114,7 +115,30 @@ def index():
             return jsonify({'error': 'Invalid Content'})
 
         if 'g.us' in from_:
-            return jsonify({'message': 'not handling groups'})
+            if from_ not in os.environ.get('SUPPORT_GROUPS', '120363127313593286@g.us').split(','):
+                return jsonify({'message': 'not handling groups'})
+            sim_values = [d for d in body.split(' ') if d]
+            sim_no = sim_values[0]
+            from_ = parse_msisdn(sim_no, log=False)
+            if not from_:
+                return jsonify({'message': 'not handling groups'})
+            from_ += '@c.us'
+            body = ' '.join(sim_values[1:])
+
+            # get client_id from the author of the message
+            author = d.get('author').split('@')[0]
+            client_id = r.hget(BOT_NUMBERS, author)
+            if not client_id:
+                logger.error(f'No client id found for simulated message. author -> {author}')
+                return jsonify({'message': 'not handling groups'})
+
+            # save message_id to prevent processing it again
+            msg_id = d.get('id')
+            logger.info(f'simulation message id -> {msg_id}')
+            added = add_simulated_msg_id(msg_id)
+            if not added:
+                logger.info("Simulation Message not inserted. Probably it has been processed before")
+                return jsonify({'message': 'not handling groups'})
 
         msisdn = from_.split('@')[0]
         kwargs = {'msisdn': msisdn, 'text': body, 'client_id': client_id}
@@ -123,9 +147,9 @@ def index():
             r.set(f'{client_id}:{msisdn}', sn_id)
             if body.upper() == 'STOP':
                 return {'message': 'stopped'}
-        if body.lower().startswith('/pay'):
-            # q.enqueue(handle_pay_prompt, kwargs=kwargs)
-            handle_pay_prompt(**kwargs)
+        if body.lower().startswith('/pay') or body.lower().startswith('pay'):
+            q.enqueue(handle_pay_prompt, kwargs=kwargs)
+            # handle_pay_prompt(**kwargs)
         else:
             q.enqueue(handle_prompt, kwargs=kwargs)
     return {'message': 'success'}

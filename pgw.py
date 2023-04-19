@@ -1,14 +1,12 @@
 import logging
 import os
 
-import phonenumbers
 import requests
-from phonenumbers import NumberParseException
 
 import crud
 from constants import UPGRADE_AMOUNT, STK_PUSH_SENT_MESSAGE, high
 from engine import save_messages
-from helpers import get_session_id
+from helpers import get_session_id, parse_msisdn
 from wp import send_message_base
 
 logger = logging.getLogger(__name__)
@@ -40,21 +38,6 @@ class TinyPesa:
             logger.error(e)
 
         return False
-
-
-def parse_msisdn(msisdn: str):
-    try:
-        if len(msisdn) == 9 or len(msisdn) == 10:
-            phone = phonenumbers.parse(msisdn, 'KE')
-        elif msisdn.startswith('+'):
-            phone = phonenumbers.parse(msisdn, None)
-        else:
-            phone = phonenumbers.parse(f'+{msisdn}', None)
-    except NumberParseException as x:
-        logger.exception(x)
-        return
-
-    return phonenumbers.format_number(phone, phonenumbers.PhoneNumberFormat.E164).replace('+', '')
 
 
 def handle_pay_prompt(msisdn, text, client_id):
