@@ -147,7 +147,8 @@ def index():
             r.set(f'{client_id}:{msisdn}', sn_id)
             if body.upper() == 'STOP':
                 return {'message': 'stopped'}
-        if body.lower().startswith('/pay') or body.lower().startswith('pay'):
+        _body = body.lower().split(" ")[0]
+        if _body in ['/pay', 'pay', '.pay']:
             q.enqueue(handle_pay_prompt, kwargs=kwargs)
             # handle_pay_prompt(**kwargs)
         else:

@@ -41,7 +41,7 @@ class TinyPesa:
 
 
 def handle_pay_prompt(msisdn, text, client_id):
-    if text.lower() == '/pay':
+    if text.lower() in ['/pay', 'pay', '.pay']:
         payment_no = msisdn
     else:
         items = [d for d in text.split(' ') if d]
