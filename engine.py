@@ -62,6 +62,11 @@ def can_get_response(msisdn, client_id):
     credits_count = int(check_paid_status(msisdn))
     if credits_count == -1 or credits_count > 0:
         return True
+    if not msisdn.startswith('254'):
+        #
+        #           FOR NOW... JUST FOR NOW... ALLOW NON KENYANS TO CONTINUE USING THE BOT
+        #
+        return True
     if credits_count == -1:
         notify_depleted_free_responses(msisdn, client_id)
     elif credits_count == -2:
