@@ -88,10 +88,12 @@ def check_for_expiry(msisdn):
         no_of_days_used = crud.get_number_of_days_used_not_paid(msisdn)
         expired = no_of_days_used >= FREE_TRIAL
         should_renew = False
+        logger.info(f"No of days used -> {no_of_days_used} , expired -> {expired}")
     else:
         time_delta = datetime.datetime.now() - last_payment.date_created
         should_renew = time_delta.days >= 2
         expired = False
+        logger.info(f"User has paid for the bot before. Should renew -> {should_renew}")
 
     return {
         'should_renew': should_renew,

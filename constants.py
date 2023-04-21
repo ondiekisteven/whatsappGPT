@@ -71,10 +71,13 @@ FREE_RESPONSES = int(os.getenv('FREE_RESPONSES', 10))
 FREE_TRIAL = int(os.getenv('FREE_TRIAL_PERIOD', 7))
 
 TRIAL_PERIOD_OVER = f"""
-*Your trial period on Sonia bot is over. 
+*Your trial period on Sonia bot is over*. 
 
 Pay Ksh. {UPGRADE_AMOUNT} to continue using the bot for the next one month
 
+Send the word "/pay" to pay
+
+For any questions, reach out to support at 254790670635
 """
 
 RENEW_SUBSCRIPTION_MESSAGE = f"""
