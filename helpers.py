@@ -5,14 +5,18 @@ import os
 import phonenumbers
 from phonenumbers import NumberParseException
 
-from constants import r, NOT_PAID, DEPLETED, PAID, FREE_RESPONSES, BOT_NUMBERS, SIMULATED
+import crud
+from constants import r, NOT_PAID, DEPLETED, PAID, FREE_RESPONSES, BOT_NUMBERS, SIMULATED, EXPIRED, FREE_TRIAL, \
+    EXPIRED_NOTIFIED, SUBSCRIPTION_EXPIRED_NOTIFIED
 from crud import save_messages
 from wp import send_message_base
 
 logger = logging.getLogger(__name__)
 
 
-def send_notification(client_id, msisdn, session_id, message):
+def send_notification(client_id, msisdn, session_id=None, message=None):
+    if session_id is None:
+        session_id = str(datetime.datetime.now().timestamp())
     new_msgs = [
         {'role': 'notification', 'content': message, 'msisdn': msisdn,
          'session_id': f'NOTIF-{session_id}', 'client_id': client_id}
@@ -77,8 +81,42 @@ def expire_key_at_midnight(key):
     r.expireat(key, when=int(expire_time.timestamp()))
 
 
+def check_for_expiry(msisdn):
+    last_payment = crud.get_last_payment(msisdn)
+
+    if not last_payment:
+        no_of_days_used = crud.get_number_of_days_used_not_paid(msisdn)
+        expired = no_of_days_used >= FREE_TRIAL
+        should_renew = False
+    else:
+        time_delta = datetime.datetime.now() - last_payment.date_created
+        should_renew = time_delta.days >= 2
+        expired = False
+
+    return {
+        'should_renew': should_renew,
+        'expired': expired
+    }
+
+
 def add_depleted(msisdn):
     added = r.sadd(DEPLETED, msisdn)
+
+    expire_key_at_midnight(DEPLETED)
+
+    return added
+
+
+def add_to_expired_and_notified(msisdn):
+    added = r.sadd(EXPIRED_NOTIFIED, msisdn)
+
+    expire_key_at_midnight(DEPLETED)
+
+    return added
+
+
+def add_to_subscription_expired_and_notified(msisdn):
+    added = r.sadd(SUBSCRIPTION_EXPIRED_NOTIFIED, msisdn)
 
     expire_key_at_midnight(DEPLETED)
 
@@ -102,12 +140,24 @@ def check_paid_status(msisdn: str):
             # user has paid and payment has not expired
             return -1
     else:
+        # check if they have used for more than <TRIAL_PERIOD_LENGTH> days
+        trial_period_over = r.sismember(EXPIRED, msisdn)
+        if trial_period_over:
+            return -2
         not_paid = r.hget(NOT_PAID, msisdn)
         if not_paid is not None:
             expire_key_at_midnight(NOT_PAID)
             # user is in not_paid list, we return remaining free responses
             return not_paid
         else:
+            expiry_status = check_for_expiry(msisdn)
+            if expiry_status['expired']:
+                r.sadd(EXPIRED, msisdn)
+                return -2
+
+            if expiry_status['should_renew']:
+                return -5
+
             # user was not found on paid and unpaid list. add to unpaid for now
             r.hset(NOT_PAID, msisdn, FREE_RESPONSES)
             return FREE_RESPONSES

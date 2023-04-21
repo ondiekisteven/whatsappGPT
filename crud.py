@@ -1,6 +1,6 @@
 import logging
 
-from sqlalchemy import Connection, select
+from sqlalchemy import select, text
 
 from constants import engine
 from db import users, payments, messages, stk_waiting
@@ -38,6 +38,14 @@ def save_payment(payment: PaymentBase):
         db.commit()
     finally:
         db.close()
+
+
+def get_last_payment(msisdn):
+    db = get_db()
+    stmt = select(payments).where(payments.c.msisdn == msisdn).order_by(payments.c.date_created.desc()).limit(1)
+    result = db.execute(stmt).fetchone()
+    db.close()
+    return result
 
 
 def get_messages(session_id):
@@ -78,7 +86,7 @@ def save_stk_waiting(msisdn, client_id, amount, target):
 
 def get_stk_waiting(msisdn, amount):
     db = get_db()
-    stmt = select(stk_waiting).where(stk_waiting.c.msisdn == msisdn).where(stk_waiting.c.fulfilled == False)\
+    stmt = select(stk_waiting).where(stk_waiting.c.msisdn == msisdn).where(stk_waiting.c.fulfilled == False) \
         .order_by(stk_waiting.c.id)
     result = db.execute(stmt)
     if result.rowcount == 1:
@@ -101,5 +109,22 @@ def mark_stk_waiting_fulfilled(waiting_id):
         raise
     else:
         db.commit()
+    finally:
+        db.close()
+
+
+def get_number_of_days_used_not_paid(msisdn):
+    db = get_db()
+    # stmt = select(func.count(func.distinct(func.DATE(messages.c.date_created)).label('days'))) \
+    #     .select_from(messages).where(messages.c.msisdn == msisdn).group_by()
+    try:
+        stmt = text('SELECT count(DISTINCT Date(date_created)) as total_days from messages where msisdn = :msisdn;')
+        result = db.execute(stmt, {'msisdn': msisdn}).fetchone()
+        total_days = result.total_days if result else None
+    except Exception as x:
+        logger.exception(x)
+        return -1
+    else:
+        return total_days
     finally:
         db.close()

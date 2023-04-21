@@ -6,10 +6,12 @@ from typing import List, Dict
 import cfg_load
 import openai
 
-from constants import DEPLETED_CREDITS_MESSAGE, UPGRADE_AMOUNT, engine, r, config_path, high, BOT_NUMBERS
+from constants import DEPLETED_CREDITS_MESSAGE, UPGRADE_AMOUNT, engine, r, config_path, high, BOT_NUMBERS, \
+    TRIAL_PERIOD_OVER, SUBSCRIPTION_EXPIRED_NOTIFIED, RENEW_SUBSCRIPTION_MESSAGE
 from crud import get_messages, save_messages
 from db import metadata
-from helpers import check_paid_status, add_depleted, get_session_id, decrement_response_count
+from helpers import check_paid_status, add_depleted, get_session_id, decrement_response_count, \
+    add_to_expired_and_notified, send_notification, add_to_subscription_expired_and_notified
 from wp import send_message_base
 
 logger = logging.getLogger(__name__)
@@ -56,10 +58,16 @@ def generate_response(chat_history: List[Dict], current_prompt: str):
     return response['choices'][0]['message']['content']
 
 
-def can_get_response(msisdn):
+def can_get_response(msisdn, client_id):
     credits_count = int(check_paid_status(msisdn))
     if credits_count == -1 or credits_count > 0:
         return True
+    if credits_count == -1:
+        notify_depleted_free_responses(msisdn, client_id)
+    elif credits_count == -2:
+        notify_trial_period_over(msisdn, client_id)
+    elif credits_count == -5:
+        notify_subscription_expired_renew(msisdn, client_id)
     return False
 
 
@@ -68,15 +76,44 @@ def notify_depleted_free_responses(msisdn, client_id):
         # notify the user that their credits have depleted or expired
         logger.info(f"user ({msisdn}) Credits have been depleted. Notifying user using client id: {client_id}")
         content = DEPLETED_CREDITS_MESSAGE.format(default_number=msisdn, upgrade_amount=UPGRADE_AMOUNT)
-        high.enqueue(send_message_base, args=(
-            client_id, msisdn, content))
-        new_msgs = [
-            {'role': 'notification', 'content': content, 'msisdn': msisdn, 'session_id': get_session_id(
-                client_id, msisdn), 'client_id': client_id},
-        ]
-        save_messages(new_msgs)
+        send_notification(client_id, msisdn, session_id=get_session_id(client_id, msisdn), message=content)
+        # high.enqueue(send_message_base, args=(
+        #     client_id, msisdn, content))
+        # new_msgs = [
+        #     {'role': 'notification', 'content': content, 'msisdn': msisdn, 'session_id': get_session_id(
+        #         client_id, msisdn), 'client_id': client_id},
+        # ]
+        # save_messages(new_msgs)
         return
     logger.info(f"user ({msisdn}) Credits have been depleted and has already been notified")
+
+
+def notify_trial_period_over(msisdn, client_id):
+    if add_to_expired_and_notified(msisdn):
+        # notify the user that their trial period is over
+        logger.info(f"user ({msisdn}) trial period is ver. Notifying user using client id: {client_id}")
+        content = TRIAL_PERIOD_OVER
+        send_notification(client_id, msisdn, message=content)
+        # high.enqueue(send_message_base, args=(
+        #     client_id, msisdn, content))
+        # new_msgs = [
+        #     {'role': 'notification', 'content': content, 'msisdn': msisdn, 'session_id': get_session_id(
+        #         client_id, msisdn), 'client_id': client_id},
+        # ]
+        # save_messages(new_msgs)
+        return
+    logger.info(f"user ({msisdn}) trial period is over and has already been notified")
+
+
+def notify_subscription_expired_renew(msisdn, client_id):
+    if add_to_subscription_expired_and_notified(msisdn):
+        # notify the user that their subscription is over and they should renew
+        logger.info(f"user ({msisdn}) subscription has expired. Notifying user using client id: {client_id}")
+        content = RENEW_SUBSCRIPTION_MESSAGE
+        send_notification(client_id, msisdn, message=content)
+
+        return
+    logger.info(f"user ({msisdn}) subscription has expired and has already been notified")
 
 
 def handle_prompt(msisdn, text, client_id):
@@ -84,8 +121,8 @@ def handle_prompt(msisdn, text, client_id):
     if r.hexists(BOT_NUMBERS, msisdn):
         logger.error('-----------cannot process requests by bots----------')
         return
-    if not can_get_response(msisdn):
-        notify_depleted_free_responses(msisdn, client_id)
+    if not can_get_response(msisdn, client_id):
+
         return
 
     try:

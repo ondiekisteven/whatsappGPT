@@ -53,18 +53,38 @@ You have now received unlimited access to the bot for the next one month. Your s
 Thanks for using Sonia AI
 """
 
-
+# REDIS OBJECT NAMES
 NOT_PAID = 'NOT_PAID'
 PAID = 'PAID'
 DEPLETED = 'DEPLETED_AND_NOTIFIED'
+EXPIRED_NOTIFIED = 'TRIAL_EXPIRED_AND_NOTIFIED'
+SUBSCRIPTION_EXPIRED_NOTIFIED = 'SUBSCRIPTION_EXPIRED_AND_NOTIFIED'
 
 BOT_CLIENTS = 'BOT_CLIENTS'
 BOT_NUMBERS = 'BOT_NUMBERS'
 
+EXPIRED = 'EXPIRED_USERS'
 SIMULATED = 'SIMULATED_MESSAGE_IDS'
 
 UPGRADE_AMOUNT = int(os.getenv('UPGRADE_AMOUNT', 50))
 FREE_RESPONSES = int(os.getenv('FREE_RESPONSES', 10))
+FREE_TRIAL = int(os.getenv('FREE_TRIAL_PERIOD', 7))
+
+TRIAL_PERIOD_OVER = f"""
+*Your trial period on Sonia bot is over. 
+
+Pay Ksh. {UPGRADE_AMOUNT} to continue using the bot for the next one month
+
+"""
+
+RENEW_SUBSCRIPTION_MESSAGE = f"""
+*Your subscription to Sonia Bot has expired. Kindly renew by sending the message "/pay". 
+
+Pay Ksh. {UPGRADE_AMOUNT} to continue using the bot for the next one month
+
+Thanks for being a valued user of Sonia Bot
+For queries, please contact 254790670635
+"""
 
 # openai.api_key = os.getenv("OPENAI_API_KEY")
 r_host = os.getenv('REDIS_HOST', 'localhost')
