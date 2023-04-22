@@ -38,15 +38,25 @@ def payment_view():
             waiting = crud.get_stk_waiting(error_msisdn, error_amount)
             if waiting:
                 client_id = waiting.client_id
+                reply_to = waiting.target
             else:
                 client_id = os.getenv('DEFAULT_CLIENT_ID')
+                reply_to = error_msisdn
 
             send_notification(
                 client_id,
-                error_msisdn,
+                reply_to,
                 get_session_id(client_id, error_msisdn),
                 f'*An Error Occurred When Processing Your Payment:*: \n\n\n{error_desc}'
             )
+            if reply_to != error_msisdn:
+
+                send_notification(
+                    client_id,
+                    error_msisdn,
+                    get_session_id(client_id, error_msisdn),
+                    f'*An Error Occurred When Processing Your Payment:*: \n\n\n{error_desc}'
+                )
             # is not a successful payment
             return {'message': 'success'}
         payment = PaymentBase(
