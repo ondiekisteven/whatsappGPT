@@ -137,6 +137,7 @@ def check_paid_status(msisdn: str):
             r.hset(NOT_PAID, msisdn, FREE_RESPONSES)
             # remove from paid list
             r.hdel(PAID, msisdn)
+            logger.warning("User subscription has expired")
             return FREE_RESPONSES
         else:
             # user has paid and payment has not expired
@@ -145,6 +146,7 @@ def check_paid_status(msisdn: str):
         # check if they have used for more than <TRIAL_PERIOD_LENGTH> days
         trial_period_over = r.sismember(EXPIRED, msisdn)
         if trial_period_over:
+            logger.warning("User trial has expired")
             return -2
         not_paid = r.hget(NOT_PAID, msisdn)
         if not_paid is not None:
@@ -155,9 +157,12 @@ def check_paid_status(msisdn: str):
             expiry_status = check_for_expiry(msisdn)
             if expiry_status['expired']:
                 r.sadd(EXPIRED, msisdn)
+                logger.warning("User trial has expired and is not in expired list")
                 return -2
 
             if expiry_status['should_renew']:
+                r.sadd(EXPIRED, msisdn)
+                logger.warning("User subscription has expired but not found in expired list")
                 return -5
 
             # user was not found on paid and unpaid list. add to unpaid for now
