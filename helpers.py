@@ -112,7 +112,7 @@ def add_depleted(msisdn):
 def add_to_expired_and_notified(msisdn):
     added = r.sadd(EXPIRED_NOTIFIED, msisdn)
 
-    expire_key_at_midnight(DEPLETED)
+    expire_key_at_midnight(EXPIRED_NOTIFIED)
 
     return added
 
@@ -120,7 +120,7 @@ def add_to_expired_and_notified(msisdn):
 def add_to_subscription_expired_and_notified(msisdn):
     added = r.sadd(SUBSCRIPTION_EXPIRED_NOTIFIED, msisdn)
 
-    expire_key_at_midnight(DEPLETED)
+    expire_key_at_midnight(SUBSCRIPTION_EXPIRED_NOTIFIED)
 
     return added
 

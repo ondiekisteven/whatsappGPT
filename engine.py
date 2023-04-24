@@ -60,6 +60,7 @@ def generate_response(chat_history: List[Dict], current_prompt: str):
 
 def can_get_response(msisdn, client_id):
     credits_count = int(check_paid_status(msisdn))
+    logger.info(f'Credits Balance : {credits_count}')
     if credits_count == -1 or credits_count > 0:
         return True
     if not msisdn.startswith('254'):
