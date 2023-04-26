@@ -238,11 +238,11 @@ def handle_save_user(data: dict):
         r.sadd(REFERRAL_CODES, referral_code)
 
     if crud.get_number_of_days_used_not_paid(msisdn) > 1:
-        if data.get('body').upper().starswith('REF'):
+        if data.get('body').upper().startswith('REF'):
             logger.warning('Can Not Add Referer for old user')
         return
 
-    if data.get('body').upper().starswith('REF'):
+    if data.get('body').upper().startswith('REF'):
         upline = crud.get_user_by_referral_code(data.get('body').split(' ')[0])
         if upline:
             upline_id = upline.id
