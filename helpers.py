@@ -197,7 +197,7 @@ def parse_msisdn(msisdn: str, log=True):
 
 
 def new_random_code():
-    length = random.randint(5, 6)
+    length = random.randint(4, 5)
     letters = string.ascii_uppercase + string.digits
     code = ''.join(random.choice(letters) for i in range(length))
     while r.sismember(REFERRAL_CODES, code):
@@ -211,14 +211,12 @@ def _get_name(sender: dict):
     if 'pushname' in sender:
         return sender['pushname']
     if 'name' in sender:
-        return sender['pushname']
-    if 'name' in sender:
-        return sender['pushname']
+        return sender['name']
     return None
 
 
 def handle_save_user(data: dict):
-    msisdn = data.get('from')
+    msisdn = data.get('from').split('@')[0]
 
     if r.sismember(USERS, msisdn):
         return
