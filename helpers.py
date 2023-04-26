@@ -226,9 +226,7 @@ def handle_save_user(data: dict):
 
     _gname = _get_name(data.get('sender'))
     name = _gname if _gname is not None else data.get('notifyName') if 'notifyName' in data.keys() else None
-    referral_code = None
-    if not r.sismember(USERS):
-        referral_code = new_random_code()
+    referral_code = new_random_code()
     try:
 
         crud.save_user(UserBase(msisdn=msisdn, referral_code=referral_code, name=name))
