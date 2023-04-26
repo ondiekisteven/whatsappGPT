@@ -62,6 +62,8 @@ SUBSCRIPTION_EXPIRED_NOTIFIED = 'SUBSCRIPTION_EXPIRED_AND_NOTIFIED'
 
 BOT_CLIENTS = 'BOT_CLIENTS'
 BOT_NUMBERS = 'BOT_NUMBERS'
+USERS = 'ALL_USERS'
+REFERRAL_CODES = 'USED_REFERRAL_CODES'
 
 EXPIRED = 'EXPIRED_USERS'
 SIMULATED = 'SIMULATED_MESSAGE_IDS'
@@ -94,3 +96,4 @@ r_host = os.getenv('REDIS_HOST', 'localhost')
 r = Redis(host=r_host, db=os.getenv('REDIS_DB', 5), charset="utf-8", decode_responses=True)
 
 high = Queue('high', connection=r)
+default = Queue('default', connection=r)

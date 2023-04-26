@@ -1,14 +1,17 @@
 import datetime
 import logging
 import os
+import random
+import string
 
 import phonenumbers
 from phonenumbers import NumberParseException
 
 import crud
 from constants import r, NOT_PAID, DEPLETED, PAID, FREE_RESPONSES, BOT_NUMBERS, SIMULATED, EXPIRED, FREE_TRIAL, \
-    EXPIRED_NOTIFIED, SUBSCRIPTION_EXPIRED_NOTIFIED
+    EXPIRED_NOTIFIED, SUBSCRIPTION_EXPIRED_NOTIFIED, USERS, REFERRAL_CODES
 from crud import save_messages
+from schema import UserBase
 from wp import send_message_base
 
 logger = logging.getLogger(__name__)
@@ -50,6 +53,8 @@ def update_clients(body: dict):
         r.hset(BOT_NUMBERS, msisdn, client_id)
         expire_key_at_midnight(BOT_NUMBERS)
 
+        handle_save_user(body)
+
 
 def add_simulated_msg_id(msg_id):
     """
@@ -71,6 +76,11 @@ def decrement_response_count(msisdn: str):
 
 def add_paid(msisdn, expiry: datetime):
     r.hset(PAID, msisdn, str(expiry.timestamp()))
+
+
+def add_users(msisdn):
+    # Adds user msisdn to list of users on redis
+    return r.sadd(USERS, msisdn)
 
 
 def expire_key_at_midnight(key):
@@ -184,3 +194,58 @@ def parse_msisdn(msisdn: str, log=True):
         return
 
     return phonenumbers.format_number(phone, phonenumbers.PhoneNumberFormat.E164).replace('+', '')
+
+
+def new_random_code():
+    length = random.randint(5, 6)
+    letters = string.ascii_uppercase + string.digits
+    code = ''.join(random.choice(letters) for i in range(length))
+    while r.sismember(REFERRAL_CODES, code):
+        new_random_code()
+    return f'REF-{code}'
+
+
+def _get_name(sender: dict):
+    if 'shortName' in sender:
+        return sender['shortName']
+    if 'pushname' in sender:
+        return sender['pushname']
+    if 'name' in sender:
+        return sender['pushname']
+    if 'name' in sender:
+        return sender['pushname']
+    return None
+
+
+def handle_save_user(data: dict):
+    msisdn = data.get('from')
+
+    if r.sismember(USERS, msisdn):
+        return
+    logger.info(f'saving user: {data.get("sender")}')
+
+    _gname = _get_name(data.get('sender'))
+    name = _gname if _gname is not None else data.get('notifyName') if 'notifyName' in data.keys() else None
+    referral_code = None
+    if not r.sismember(USERS):
+        referral_code = new_random_code()
+    try:
+
+        crud.save_user(UserBase(msisdn=msisdn, referral_code=referral_code, name=name))
+    except Exception as x:
+        logger.exception(x)
+        return
+    else:
+        add_users(msisdn)
+        r.sadd(REFERRAL_CODES, referral_code)
+
+    if crud.get_number_of_days_used_not_paid(msisdn) > 1:
+        if data.get('body').upper().starswith('REF'):
+            logger.warning('Can Not Add Referer for old user')
+        return
+
+    if data.get('body').upper().starswith('REF'):
+        upline = crud.get_user_by_referral_code(data.get('body').split(' ')[0])
+        if upline:
+            upline_id = upline.id
+            crud.add_upline(msisdn, upline_id)

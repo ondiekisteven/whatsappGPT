@@ -26,6 +26,34 @@ def save_user(user: UserBase):
         db.close()
 
 
+def get_user_by_referral_code(code: str):
+    db = get_db()
+    try:
+        stmt = select(users).where(users.c.referral_code == code)
+        result = db.execute(stmt).fetchone()
+        db.close()
+    except Exception as e:
+        logger.exception(e)
+        raise
+    finally:
+        db.close()
+    return result
+
+
+def get_user_by_id(user_id: int):
+    db = get_db()
+    try:
+        stmt = select(users).where(users.c.id == user_id)
+        result = db.execute(stmt).fetchone()
+        db.close()
+    except Exception as e:
+        logger.exception(e)
+        raise
+    finally:
+        db.close()
+    return result
+
+
 def save_payment(payment: PaymentBase):
     db = get_db()
     try:
@@ -103,6 +131,20 @@ def mark_stk_waiting_fulfilled(waiting_id):
     db = get_db()
     try:
         db.execute(stk_waiting.update().where(stk_waiting.c.id == waiting_id).values(fulfilled=True))
+    except Exception as x:
+        logger.exception(x)
+        db.rollback()
+        raise
+    else:
+        db.commit()
+    finally:
+        db.close()
+
+
+def add_upline(msisdn, upline_id):
+    db = get_db()
+    try:
+        db.execute(users.update().where(users.c.msisdn == msisdn).values(invited_by_id=upline_id))
     except Exception as x:
         logger.exception(x)
         db.rollback()

@@ -7,8 +7,8 @@ from pydantic import BaseModel
 class UserBase(BaseModel):
     msisdn: str
     name: Optional[str]
-    free: bool = True
-    last_free_notify: Optional[datetime]
+    referral_code: str
+    invited_by_id: Optional[int]
 
 
 class User(UserBase):

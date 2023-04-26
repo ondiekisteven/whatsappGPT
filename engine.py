@@ -7,7 +7,7 @@ import cfg_load
 import openai
 
 from constants import DEPLETED_CREDITS_MESSAGE, UPGRADE_AMOUNT, engine, r, config_path, high, BOT_NUMBERS, \
-    TRIAL_PERIOD_OVER, RENEW_SUBSCRIPTION_MESSAGE
+    TRIAL_PERIOD_OVER, RENEW_SUBSCRIPTION_MESSAGE, default
 from crud import get_messages, save_messages
 from db import metadata
 from helpers import check_paid_status, add_depleted, get_session_id, decrement_response_count, \

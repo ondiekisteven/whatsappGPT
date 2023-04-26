@@ -36,15 +36,14 @@ payments = Table('mpesa_payments', metadata,
                  Column('request_dump', Text)
                  )
 
-
 users = Table('users', metadata,
               Column('id', Integer, primary_key=True),
               Column('msisdn', String(20), unique=True),
               Column('name', String(150)),
-              Column('free', Boolean),
-              Column('last_free_notify', DateTime())
+              Column('referral_code', String(20), unique=True),
+              Column('invited_by_id', Integer),
+              Column('date_created', DateTime(timezone=True), server_default=func.now()),
               )
-
 
 stk_waiting = Table('stk_waiting', metadata,
                     Column('id', Integer, primary_key=True),
