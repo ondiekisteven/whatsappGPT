@@ -91,6 +91,42 @@ Thanks for being a valued user of Sonia Bot
 For queries, please contact 254790670635
 """
 
+REFERRAL_CODE_NOT_FOUND_MESSAGE = """*Invalid Referral Code*. The referral code you sent does not exist. 
+Check again and make sure you copy the right referral code. 
+
+For queries, please contact 254790670635
+"""
+
+USER_HAS_ANOTHER_INVITE_MESSAGE = """*Error processing referral code*. You were already invited by another user. 
+You cannot use more than one invite code 
+
+For queries, please contact 254790670635
+"""
+
+
+USER_MORE_THAN_2_DAYS_MESSAGE = """*Error processing referral code*. 
+You have used the bot for more than 2 days, you cannot add a referral code now.
+
+For queries, please contact 254790670635
+"""
+
+
+UPLINE_ADDED_MESSAGE = """Welcome To Sonia AI. You have been invited by {referer_msisdn}. You will now been given {
+credits_count} free credits to use daily for {free_trial} days.
+
+To find out what I can do, type /help. 
+
+You can also ask me any questions, I will answer them instantly."""
+
+
+DOWNLINE_ADDED_MESSAGE = """New user added with your referral code.
+
+Phone Number: {downline_msisdn}.
+
+You have now a total of {downlines_count} referred users. 
+Thanks for helping Sonia AI to grow. 
+"""
+
 # openai.api_key = os.getenv("OPENAI_API_KEY")
 r_host = os.getenv('REDIS_HOST', 'localhost')
 r = Redis(host=r_host, db=os.getenv('REDIS_DB', 5), charset="utf-8", decode_responses=True)

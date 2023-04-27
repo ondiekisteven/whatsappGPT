@@ -60,8 +60,15 @@ def send_message_base(client_id, chat_id, message):
         'client_id': client_id
     }
 
+    if len(chat_id) == 12:
+        chat_id = f'{chat_id}@c.us'
+    if '@' in chat_id:
+        pass
+    else:
+        # is group stuff
+        chat_id = f'{chat_id}@g.us'
     payload = {
-        "chat_id": f'{chat_id}@c.us',
+        "chat_id": chat_id,
         "message": message,
         "type": "chat"
     }

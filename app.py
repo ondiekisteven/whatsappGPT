@@ -10,7 +10,8 @@ from rq import Queue
 import crud
 from constants import PAYMENT_RECEIVED_MESSAGE, BOT_NUMBERS
 from engine import r, handle_prompt
-from helpers import send_notification, get_session_id, add_paid, parse_msisdn, add_simulated_msg_id, update_clients
+from helpers import send_notification, get_session_id, add_paid, parse_msisdn, add_simulated_msg_id, update_clients, \
+    handle_referral_msg
 from pgw import handle_pay_prompt
 from schema import PaymentBase
 
@@ -152,6 +153,10 @@ def index():
 
         msisdn = from_.split('@')[0]
         kwargs = {'msisdn': msisdn, 'text': body, 'client_id': client_id}
+        if body.upper().startswith('REF'):
+            # q.enqueue(handle_referral_msg, args=(d,))
+            handle_referral_msg(d)
+            return {'message': 'success'}
         if body.upper() in ['STOP', 'HI']:
             sn_id = str(datetime.now().timestamp())
             r.set(f'{client_id}:{msisdn}', sn_id)

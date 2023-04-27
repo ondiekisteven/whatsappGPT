@@ -40,6 +40,34 @@ def get_user_by_referral_code(code: str):
     return result
 
 
+def get_user_by_msisdn(msisdn: str):
+    db = get_db()
+    try:
+        stmt = select(users).where(users.c.msisdn == msisdn)
+        result = db.execute(stmt).fetchone()
+        db.close()
+    except Exception as e:
+        logger.exception(e)
+        raise
+    finally:
+        db.close()
+    return result
+
+
+def get_downlines_count(user_id: int):
+    db = get_db()
+    try:
+        stmt = text('select count(*) as count from users where invited_by_id=:user_id')
+        result = db.execute(stmt, {'user_id': user_id}).fetchone()
+    except Exception as x:
+        logger.exception(x)
+        count = 0
+    else:
+        count = result.count
+    finally:
+        db.close()
+    return count
+
 def get_user_by_id(user_id: int):
     db = get_db()
     try:
