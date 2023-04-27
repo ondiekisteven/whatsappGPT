@@ -252,11 +252,12 @@ def handle_referral_msg(data: dict):
     referral_code = data.get('body').split(' ')[0]
     referer = crud.get_user_by_referral_code(referral_code)
     msisdn = data.get('from').split('@')[0]
+    client_id = data.get('client_id')
 
     # if referral code is not associated with any user
     if not referer:
         send_notification(
-            client_id=data.get('client_ID'), msisdn=msisdn, message=REFERRAL_CODE_NOT_FOUND_MESSAGE)
+            client_id=client_id, msisdn=msisdn, message=REFERRAL_CODE_NOT_FOUND_MESSAGE)
         logger.error(f'Referral Code Not Found. Code: {referral_code}, ')
         return
 
@@ -268,13 +269,13 @@ def handle_referral_msg(data: dict):
         # user already has a referer, we discard any subsequent requests
         logger.warning('User already has an invite. Cannot use referral code again')
         send_notification(
-            client_id=data.get('client_id'), msisdn=msisdn, message=USER_HAS_ANOTHER_INVITE_MESSAGE)
+            client_id=client_id, msisdn=msisdn, message=USER_HAS_ANOTHER_INVITE_MESSAGE)
         return
 
     if crud.get_number_of_days_used_not_paid(msisdn) > 2:
         logger.info("User has used the bot more than 2 days. They cannot add an invite code to their account")
         send_notification(
-            client_id=data.get('client_id'), msisdn=msisdn, message=USER_MORE_THAN_2_DAYS_MESSAGE
+            client_id=client_id, msisdn=msisdn, message=USER_MORE_THAN_2_DAYS_MESSAGE
         )
         return
 
@@ -282,12 +283,12 @@ def handle_referral_msg(data: dict):
     logger.info(f'referer: {referer.__dict__}')
     logger.info(f'downline: {user.__dict__}')
     crud.add_upline(msisdn, referer.id)
-    send_notification(data.get('client_id'), msisdn, message=UPLINE_ADDED_MESSAGE.format(
+    send_notification(client_id, msisdn, message=UPLINE_ADDED_MESSAGE.format(
         referer_msisdn=referer.msisdn,
         credits_count=FREE_RESPONSES,
         free_trial=FREE_TRIAL
     ))
-    send_notification(data.get('client_id'), referer.msisdn, message=DOWNLINE_ADDED_MESSAGE.format(
+    send_notification(client_id, referer.msisdn, message=DOWNLINE_ADDED_MESSAGE.format(
         downline_msisdn=msisdn,
         downlines_count=crud.get_downlines_count(referer.id)
     ))
