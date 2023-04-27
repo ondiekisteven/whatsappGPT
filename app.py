@@ -153,7 +153,7 @@ def index():
 
         msisdn = from_.split('@')[0]
         kwargs = {'msisdn': msisdn, 'text': body, 'client_id': client_id}
-        if body.upper().startswith('REF'):
+        if body.upper().startswith('REF') and ' ' not in body:
             # q.enqueue(handle_referral_msg, args=(d,))
             handle_referral_msg(d)
             return {'message': 'success'}
