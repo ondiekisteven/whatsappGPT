@@ -11,7 +11,7 @@ import crud
 from constants import PAYMENT_RECEIVED_MESSAGE, BOT_NUMBERS
 from engine import r, handle_prompt
 from helpers import send_notification, get_session_id, add_paid, parse_msisdn, add_simulated_msg_id, update_clients, \
-    handle_referral_msg
+    handle_referral_msg, handle_getting_code
 from pgw import handle_pay_prompt
 from schema import PaymentBase
 
@@ -166,6 +166,8 @@ def index():
         if _body in ['/pay', 'pay', '.pay']:
             q.enqueue(handle_pay_prompt, kwargs=kwargs)
             # handle_pay_prompt(**kwargs)
+        if _body in ['/code']:
+            q.enqueue(handle_getting_code, args=d)
         else:
             q.enqueue(handle_prompt, kwargs=kwargs)
     return {'message': 'success'}

@@ -294,3 +294,14 @@ def handle_referral_msg(data: dict):
     ))
     logger.info("Done processing user...")
 
+
+def handle_getting_code(data: dict):
+    code = crud.get_user_by_msisdn(data.get('from'))
+    send_notification(data.get('client_id'), data.get('from'), message=f"""
+    Your referral code is {code.referral_code}
+    
+    Copy the code and send it to users to invite them 
+    
+    *NOTE: ASK USERS TO SEND THE INVITE CODE AT LEAST TWICE. TELL USERS TO SEND THE MESSAGE TWICE TO THE BOT FOR THE CODE TO REFLECT CORRECTLY*
+    """)
+    send_notification(data.get('client_id'), data.get('from'), message=code.referral_code)
