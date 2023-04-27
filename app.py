@@ -167,7 +167,7 @@ def index():
             q.enqueue(handle_pay_prompt, kwargs=kwargs)
             # handle_pay_prompt(**kwargs)
         if _body in ['/code']:
-            q.enqueue(handle_getting_code, args=d)
+            q.enqueue(handle_getting_code, args=(d,))
         else:
             q.enqueue(handle_prompt, kwargs=kwargs)
     return {'message': 'success'}
