@@ -296,7 +296,8 @@ def handle_referral_msg(data: dict):
 
 
 def handle_getting_code(data: dict):
-    code = crud.get_user_by_msisdn(data.get('from'))
+    msisdn = data.get('from').split("@")[0]
+    code = crud.get_user_by_msisdn(msisdn)
     send_notification(data.get('client_id'), data.get('from'), message=f"""
     Your referral code is {code.referral_code}
     
