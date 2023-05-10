@@ -6,9 +6,7 @@ from redis.client import Redis
 from rq import Queue
 
 from db import create_db
-from wp import Whatsapp
 
-wa = Whatsapp(os.getenv('API_USERNAME'), os.getenv('API_PASSWORD'))
 config_path = os.getenv('CONFIG_FILE', 'config.yaml')
 try:
     confg = cfg_load.load(config_path)
@@ -66,6 +64,9 @@ logger = logging.getLogger('engine')
 
 engine = create_db(confg['database'])
 
+from wp import Whatsapp
+
+wa = Whatsapp(os.getenv('API_USERNAME'), os.getenv('API_PASSWORD'))
 DEPLETED_CREDITS_MESSAGE = """*Your free credits have been depleted for today*, but don't worry... 
 
 With just Ksh. {upgrade_amount}, you can use the bot *For A Whole Month*, and do your research and assignments
