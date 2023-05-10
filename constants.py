@@ -46,7 +46,7 @@ logging.config.dictConfig({
             "class": "logging.handlers.RotatingFileHandler",
             "formatter": "standard",
             "level": "INFO",
-            "filename": os.path.join(BASE_DIR, 'logs/bot.log'),
+            "filename": os.path.join(BASE_DIR, 'logs/chatgpt.log'),
             "mode": "a",
             "encoding": "utf-8",
             "maxBytes": 5000000,
