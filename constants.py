@@ -18,7 +18,7 @@ except FileNotFoundError:
 
 LOGGING_CONFIG = None
 LOGLEVEL = os.getenv('LOGGING_LEVEL', 'info').upper()
-BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+BASE_DIR = os.path.dirname(__file__)
 
 if not os.path.exists(os.path.join(BASE_DIR, 'logs')):
     os.mkdir(os.path.join(BASE_DIR, 'logs'))

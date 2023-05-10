@@ -16,6 +16,7 @@ from pgw import handle_pay_prompt
 from schema import PaymentBase
 
 logger = logging.getLogger(__name__)
+
 app = Flask(__name__)
 openai.api_key = os.getenv("OPENAI_API_KEY")
 q = Queue('default', connection=r)
@@ -170,4 +171,6 @@ def index():
             q.enqueue(handle_getting_code, args=(d,))
         else:
             q.enqueue(handle_prompt, kwargs=kwargs)
+    else:
+        logger.warning("Method Not Allowed")
     return {'message': 'success'}
