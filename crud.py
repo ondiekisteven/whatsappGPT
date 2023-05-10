@@ -1,12 +1,8 @@
-import logging
-
 from sqlalchemy import select, text
 
-from constants import engine
+from constants import engine, logger
 from db import users, payments, messages, stk_waiting
 from schema import UserBase, PaymentBase
-
-logger = logging.getLogger(__name__)
 
 
 def get_db():
@@ -67,6 +63,7 @@ def get_downlines_count(user_id: int):
     finally:
         db.close()
     return count
+
 
 def get_user_by_id(user_id: int):
     db = get_db()

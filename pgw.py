@@ -1,15 +1,12 @@
-import logging
 import os
 
 import requests
 
 import crud
-from constants import UPGRADE_AMOUNT, STK_PUSH_SENT_MESSAGE, high
+from constants import UPGRADE_AMOUNT, STK_PUSH_SENT_MESSAGE, high, logger
 from engine import save_messages
 from helpers import get_session_id, parse_msisdn
 from wp import send_message_base
-
-logger = logging.getLogger(__name__)
 
 
 class KopoKopo:

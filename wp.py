@@ -75,6 +75,6 @@ def send_message_base(client_id, chat_id, message):
     r = requests.post(os.getenv('WEBAPI_URL'), headers=headers, json=payload)
     if r.status_code == 200:
         logger.info(f"200 -> {r.text}")
-
+        return
     logger.error(f'{r.status_code} -> {r.text}')
     return None

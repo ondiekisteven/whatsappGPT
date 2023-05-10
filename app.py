@@ -51,7 +51,6 @@ def payment_view():
                 f'*An Error Occurred When Processing Your Payment:*: \n\n\n{error_desc}'
             )
             if reply_to != error_msisdn:
-
                 send_notification(
                     client_id,
                     error_msisdn,

@@ -1,5 +1,4 @@
 import datetime
-import logging
 import os
 import random
 import string
@@ -9,13 +8,12 @@ from phonenumbers import NumberParseException
 
 import crud
 from constants import r, NOT_PAID, DEPLETED, PAID, FREE_RESPONSES, BOT_NUMBERS, SIMULATED, EXPIRED, FREE_TRIAL, \
-    EXPIRED_NOTIFIED, SUBSCRIPTION_EXPIRED_NOTIFIED, USERS, REFERRAL_CODES, high, REFERRAL_CODE_NOT_FOUND_MESSAGE, \
-    USER_HAS_ANOTHER_INVITE_MESSAGE, USER_MORE_THAN_2_DAYS_MESSAGE, UPLINE_ADDED_MESSAGE, DOWNLINE_ADDED_MESSAGE
+    EXPIRED_NOTIFIED, SUBSCRIPTION_EXPIRED_NOTIFIED, USERS, REFERRAL_CODES, REFERRAL_CODE_NOT_FOUND_MESSAGE, \
+    USER_HAS_ANOTHER_INVITE_MESSAGE, USER_MORE_THAN_2_DAYS_MESSAGE, UPLINE_ADDED_MESSAGE, DOWNLINE_ADDED_MESSAGE, \
+    logger
 from crud import save_messages
 from schema import UserBase
 from wp import send_message_base
-
-logger = logging.getLogger(__name__)
 
 
 def send_notification(client_id, msisdn, session_id=None, message=None):

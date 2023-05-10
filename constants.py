@@ -1,5 +1,5 @@
-import os
 import logging.config
+import os
 
 import cfg_load
 from redis.client import Redis
@@ -16,9 +16,54 @@ except FileNotFoundError:
     raise NotImplementedError(
         "You have not specified a config file path. Default config name is 'config.yaml'")
 
-logging.config.fileConfig('logging.conf', disable_existing_loggers=False)
+LOGGING_CONFIG = None
+LOGLEVEL = os.getenv('LOGGING_LEVEL', 'info').upper()
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+
+if not os.path.exists(os.path.join(BASE_DIR, 'logs')):
+    os.mkdir(os.path.join(BASE_DIR, 'logs'))
+
+logging.config.dictConfig({
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'console': {
+            "format": "%(asctime)s\t%(levelname)s\t%(filename)s\t%(message)s"
+        },
+        "standard": {
+            "class": "logging.Formatter",
+            'format': '%(asctime)s %(levelname)s [%(name)s:%(lineno)s] %(message)s',
+            "datefmt": "%d %b %y %H:%M:%S"
+        }
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'console',
+            "level": "INFO",
+        },
+        "file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "formatter": "standard",
+            "level": "INFO",
+            "filename": os.path.join(BASE_DIR, 'logs/bot.log'),
+            "mode": "a",
+            "encoding": "utf-8",
+            "maxBytes": 5000000,
+            "backupCount": 20
+        }
+    },
+
+    'loggers': {
+        '': {
+            'level': LOGLEVEL,
+            'handlers': ['file', 'console'],
+        },
+    },
+})
 
 logger = logging.getLogger('engine')
+
 engine = create_db(confg['database'])
 
 DEPLETED_CREDITS_MESSAGE = """*Your free credits have been depleted for today*, but don't worry... 
@@ -103,13 +148,11 @@ You cannot use more than one invite code
 For queries, please contact 254790670635
 """
 
-
 USER_MORE_THAN_2_DAYS_MESSAGE = """*Error processing referral code*. 
 You have used the bot for more than 2 days, you cannot add a referral code now.
 
 For queries, please contact 254790670635
 """
-
 
 UPLINE_ADDED_MESSAGE = """Welcome To Sonia AI. You have been invited by {referer_msisdn}. You will now been given {
 credits_count} free credits to use daily for {free_trial} days.
@@ -118,13 +161,18 @@ To find out what I can do, type /help.
 
 You can also ask me any questions, I will answer them instantly."""
 
-
 DOWNLINE_ADDED_MESSAGE = """New user added with your referral code.
 
 Phone Number: {downline_msisdn}.
 
 You have now a total of {downlines_count} referred users. 
 Thanks for helping Sonia AI to grow. 
+"""
+
+ERROR_GENERATING_RESPONSE = """
+An error occurred when generating a response. We apologize for that. Please try your question again after a few minutes.
+
+Thank you for using Sonia AI 
 """
 
 # openai.api_key = os.getenv("OPENAI_API_KEY")

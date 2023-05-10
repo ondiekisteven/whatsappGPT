@@ -1,20 +1,19 @@
 import datetime
-import logging.config
 import random
+import re
 from typing import List, Dict
 
 import cfg_load
 import openai
 
 from constants import DEPLETED_CREDITS_MESSAGE, UPGRADE_AMOUNT, engine, r, config_path, high, BOT_NUMBERS, \
-    TRIAL_PERIOD_OVER, RENEW_SUBSCRIPTION_MESSAGE, default
+    TRIAL_PERIOD_OVER, RENEW_SUBSCRIPTION_MESSAGE, logger, ERROR_GENERATING_RESPONSE
 from crud import get_messages, save_messages
 from db import metadata
 from helpers import check_paid_status, add_depleted, get_session_id, decrement_response_count, \
     add_to_expired_and_notified, send_notification, add_to_subscription_expired_and_notified
 from wp import send_message_base
 
-logger = logging.getLogger(__name__)
 metadata.create_all(engine)
 
 
@@ -124,9 +123,19 @@ def handle_prompt(msisdn, text, client_id):
             r.set(rk, sn_id)
     except Exception as e:
         logger.error(e)
+
+        overloaded = 'That model is currently overloaded with other requests'
+        rate_limit = 'Rate limit reached'
+        string_list = [overloaded, rate_limit]
+
+        pattern = '|'.join(string_list)
+        if re.search(pattern, str(e)):
+            send_notification(client_id, msisdn, message=ERROR_GENERATING_RESPONSE)
+            return ''
+
         sn_id = str(datetime.datetime.now().timestamp())
         r.set(rk, sn_id)
-        return 'Hello! How can I assist you today?'
+        return ''
     else:
         new_msgs = [
             {'role': 'user', 'content': text, 'msisdn': msisdn,
