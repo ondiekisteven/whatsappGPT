@@ -142,12 +142,12 @@ def check_paid_status(msisdn: str):
         if paid_expiry < datetime.datetime.now():
 
             # user payment has expired,
-            # add to unpaid list,
-            r.hset(NOT_PAID, msisdn, FREE_RESPONSES)
+            # add to expired list,
+            r.sadd(EXPIRED, msisdn)
             # remove from paid list
             r.hdel(PAID, msisdn)
             logger.warning("User subscription has expired")
-            return FREE_RESPONSES
+            return -5
         else:
             # user has paid and payment has not expired
             return -1
