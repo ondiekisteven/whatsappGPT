@@ -31,6 +31,16 @@ services:
     networks:
       - whatsapp-network
 
+  command:
+    build:
+        context: .
+        dockerfile: Workers.Dockerfile
+    command: /bin/bash
+    env_file:
+      - ./.env
+    networks:
+      - whatsapp-network
+
   high_worker:
     build:
         context: .
