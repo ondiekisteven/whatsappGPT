@@ -109,6 +109,14 @@ def get_messages(session_id):
     return result
 
 
+def get_payments():
+    db = get_db()
+    stmt = select(payments).order_by('date_created')
+    result = db.execute(stmt).fetchall()
+    db.close()
+    return result
+
+
 def save_messages(msg_objs: list):
     logger.info(f"saving : {msg_objs}")
     db = get_db()
