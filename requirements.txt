@@ -33,3 +33,4 @@ pymysql
 anysd~=1.0.8
 pydantic~=1.10.7
 phonenumbers~=8.13.8
+requests
