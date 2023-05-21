@@ -68,10 +68,13 @@ def can_get_response(msisdn, client_id):
         #
         return True
     if credits_count == -2:
+        return True
         notify_trial_period_over(msisdn, client_id)
     elif credits_count == -5:
+        return True
         notify_subscription_expired_renew(msisdn, client_id)
     else:
+        return True
         notify_depleted_free_responses(msisdn, client_id)
     return False
 
