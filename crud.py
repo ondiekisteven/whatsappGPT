@@ -154,7 +154,11 @@ def get_stk_waiting(msisdn, amount):
         stk = result.fetchone()
     else:
         results = result.fetchall()
-        stk = [item for item in results if item.amount == amount][-1]
+        stk = [item for item in results if item.amount == amount]
+        if stk:
+            return stk[-1]
+        else:
+            return None
 
     db.close()
     return stk
