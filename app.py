@@ -104,7 +104,8 @@ def payment_view():
                     expiry=expiry.strftime("%d/%m/%Y, %H:%M")
                 )
             )
-        except Exception:
+        except Exception as x:
+            logger.exception(x)
             logger.warning('A Db Error Occurred when saving payment. ')
     else:
         # handle mpesa req here...
