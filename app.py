@@ -87,7 +87,10 @@ def payment_view():
 
             logger.info(f"Adding {target} to paid users")
 
-            expiry = datetime.now() + timedelta(days=30)
+            now = datetime.strptime(str([x['Value'] for
+                                         x in req['Body']['stkCallback']['CallbackMetadata']['Item']
+                                         if x['Name'] == 'TransactionDate'][0]), '%Y%m%d%h%m%s')
+            expiry = now + timedelta(days=30)
             add_paid(target, expiry)
             logger.info(f"Sending notification to {target} using {client_id}")
             send_notification(

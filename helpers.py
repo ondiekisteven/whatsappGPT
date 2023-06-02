@@ -17,6 +17,9 @@ from wp import send_message_base
 
 
 def send_notification(client_id, msisdn, session_id=None, message=None):
+    if not client_id or client_id is None:
+        logger.warning("NO CLIENT ID FOUND. CAN NOT SEND NOTIFICATION")
+        return
     if session_id is None:
         session_id = str(datetime.datetime.now().timestamp())
     new_msgs = [

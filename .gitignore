@@ -18,3 +18,5 @@ build/
 .env
 config.yaml
 .idea
+
+*.log
