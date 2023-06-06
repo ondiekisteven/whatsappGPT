@@ -4,6 +4,7 @@ import os
 from datetime import datetime, timedelta
 
 import openai
+import requests
 from flask import Flask, request, jsonify
 from rq import Queue
 
@@ -27,11 +28,20 @@ def test():
     return {'message': 'success'}
 
 
+def forward_payment(payload, url):
+    logger.info(f"Forwarding TinyPesa Request: payload -> {payload}, url -> {url}")
+    req = requests.post(url, json=payload, verify=False)
+    logger.info(f"Response code -> {req.status_code} response body -> {req.text}")
+
+
 @app.route('/payment', methods=['POST'])
 def payment_view():
+
     req = request.json
     if isinstance(req, dict) and 'Body' in req and 'stkCallback' in req['Body']:
-        # is tinypesa payment
+        # is tiny pesa payment
+        if os.getenv('FORWARD_PAYMENTS_URL'):
+            q.enqueue(forward_payment, args=(req, os.getenv('FORWARD_PAYMENTS_URL')))
 
         if 'CallbackMetadata' not in req['Body']['stkCallback']:
             error_desc = req['Body']['stkCallback']['ResultDesc']
