@@ -62,11 +62,11 @@ def can_get_response(msisdn, client_id):
     logger.info(f'Credits Balance : {credits_count}')
     if credits_count == -1 or credits_count > 0:
         return True
-    # if not msisdn.startswith('254'):
-    #     #
-    #     #           FOR NOW... JUST FOR NOW... ALLOW NON KENYANS TO CONTINUE USING THE BOT
-    #     #
-    #     return True
+    if not msisdn.startswith('254'):
+        #
+        #           FOR NOW... JUST FOR NOW... ALLOW NON KENYANS TO CONTINUE USING THE BOT
+        #
+        return True
     if credits_count == -2:
         notify_trial_period_over(msisdn, client_id)
     elif credits_count == -5:
