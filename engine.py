@@ -1,4 +1,5 @@
 import datetime
+import os
 import random
 import re
 from typing import List, Dict
@@ -50,7 +51,7 @@ def generate_response(chat_history: List[Dict], current_prompt: str):
     logger.info(f"Generating response: api_key -> {api_key} history_length -> {len(chat_history)} ...")
     response = openai.ChatCompletion.create(
         api_key=api_key,
-        model="gpt-3.5-turbo",
+        model=os.getenv('GPT-MODEL'),
         messages=chat_history
     )
 
