@@ -59,15 +59,12 @@ def generate_response(chat_history: List[Dict], current_prompt: str):
 
 
 def can_get_response(msisdn, client_id):
+    if not msisdn.startswith('254'):
+        return bool(int(os.getenv('ALLOW_NON_KENYANS', '0')))
     credits_count = int(check_paid_status(msisdn))
     logger.info(f'Credits Balance : {credits_count}')
     if credits_count == -1 or credits_count > 0:
         return True
-    if not msisdn.startswith('254'):
-        #
-        #           FOR NOW... JUST FOR NOW... ALLOW NON KENYANS TO CONTINUE USING THE BOT
-        #
-        return bool(int(os.getenv('ALLOW_NON_KENYANS', '0')))
     if credits_count == -2:
         notify_trial_period_over(msisdn, client_id)
     elif credits_count == -5:
