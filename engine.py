@@ -67,7 +67,7 @@ def can_get_response(msisdn, client_id):
         #
         #           FOR NOW... JUST FOR NOW... ALLOW NON KENYANS TO CONTINUE USING THE BOT
         #
-        return True
+        return bool(int(os.getenv('ALLOW_NON_KENYANS', '0')))
     if credits_count == -2:
         notify_trial_period_over(msisdn, client_id)
     elif credits_count == -5:
