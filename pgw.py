@@ -65,3 +65,11 @@ def handle_pay_prompt(msisdn, text, client_id):
         ]
         high.enqueue(send_message_base, args=(client_id, msisdn, resp_msg))
         save_messages(new_msgs)
+    else:
+        resp_msg = 'Error sending stk push to your phone. Please try again after some time.'
+        new_msgs = [
+            {'role': 'notification', 'content': resp_msg, 'msisdn': msisdn, 'session_id': get_session_id(
+                client_id, msisdn)},
+        ]
+        high.enqueue(send_message_base, args=(client_id, msisdn, resp_msg))
+        save_messages(new_msgs)
