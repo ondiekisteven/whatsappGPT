@@ -131,7 +131,7 @@ def payment_view():
 def index():
     if request.method == "POST":
         d = request.json
-        q.enqueue(update_clients, d)
+        # q.enqueue(update_clients, d)
         from_ = d.get('from') or ''
         body = d.get('body')
         client_id = d.get('client_id')
