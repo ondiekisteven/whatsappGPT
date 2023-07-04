@@ -112,6 +112,8 @@ def handle_prompt(msisdn, text, client_id):
     if r.hexists(BOT_NUMBERS, msisdn):
         logger.error('-----------cannot process requests by bots----------')
         return
+    if msisdn in os.getenv('BLOCKED_USERS').split(","):
+        return
     if not can_get_response(msisdn, client_id):
         return
 
