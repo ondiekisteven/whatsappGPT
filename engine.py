@@ -137,7 +137,7 @@ def handle_prompt(msisdn, text, client_id):
 
         sn_id = str(datetime.datetime.now().timestamp())
         r.set(rk, sn_id)
-        return ''
+        raise
     else:
         new_msgs = [
             {'role': 'user', 'content': text, 'msisdn': msisdn,
