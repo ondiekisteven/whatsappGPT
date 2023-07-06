@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import openai
 import requests
 from flask import Flask, request, jsonify
-from rq import Queue
+from rq import Queue, Retry
 
 import crud
 from constants import PAYMENT_RECEIVED_MESSAGE, BOT_NUMBERS
@@ -168,8 +168,8 @@ def index():
         msisdn = from_.split('@')[0]
         kwargs = {'msisdn': msisdn, 'text': body, 'client_id': client_id}
         if body.upper().startswith('REF') and ' ' not in body:
-            # q.enqueue(handle_referral_msg, args=(d,))
-            handle_referral_msg(d)
+            q.enqueue(handle_referral_msg, args=(d,))
+            # handle_referral_msg(d)
             return {'message': 'success'}
         if body.upper() in ['STOP', 'HI']:
             sn_id = str(datetime.now().timestamp())
@@ -184,7 +184,7 @@ def index():
         elif _body in ['/code']:
             q.enqueue(handle_getting_code, args=(d,))
         else:
-            q.enqueue(handle_prompt, kwargs=kwargs)
+            q.enqueue(handle_prompt, kwargs=kwargs, retry=Retry(max=4, interval=60))
     else:
         logger.warning("Method Not Allowed")
     return {'message': 'success'}
