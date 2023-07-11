@@ -8,8 +8,8 @@ services:
       context: .
       dockerfile: Dockerfile
 
-    command: gunicorn app:app --bind 0.0.0.0:5000 --workers 2 --access-logfile /app/logs/chatgpt.log
-#    command: flask run --host=0.0.0.0 --port=5000
+#    command: gunicorn app:app --bind 0.0.0.0:5000 --workers 2 --access-logfile /app/logs/chatgpt.log
+    command: flask run --host=0.0.0.0 --port=5000
 
     ports:
       - "5009:5000"
@@ -30,6 +30,8 @@ services:
       - ./.env
     networks:
       - whatsapp-network
+    deploy:
+      replicas: 2
 
   command:
     build:
@@ -38,6 +40,8 @@ services:
     command: /bin/bash
     env_file:
       - ./.env
+    volumes:
+      - ./logs/:/app/logs/
     networks:
       - whatsapp-network
 
@@ -48,6 +52,8 @@ services:
     command: rq worker high
     env_file:
       - ./.env
+    volumes:
+      - ./logs/:/app/logs/
     networks:
       - whatsapp-network
 

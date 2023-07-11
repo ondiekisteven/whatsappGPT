@@ -20,3 +20,5 @@ config.yaml
 .idea
 
 *.log
+
+logs/
