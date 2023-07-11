@@ -9,10 +9,10 @@ import openai
 
 from constants import DEPLETED_CREDITS_MESSAGE, UPGRADE_AMOUNT, engine, r, config_path, high, BOT_NUMBERS, \
     TRIAL_PERIOD_OVER, RENEW_SUBSCRIPTION_MESSAGE, logger, ERROR_GENERATING_RESPONSE
-from crud import get_messages, save_messages
+from crud import get_messages, save_messages, get_paid_for_key, get_last_payment
 from db import metadata
 from helpers import check_paid_status, add_depleted, get_session_id, decrement_response_count, \
-    add_to_expired_and_notified, send_notification, add_to_subscription_expired_and_notified
+    add_to_expired_and_notified, send_notification, add_to_subscription_expired_and_notified, add_premium
 from wp import send_message_base
 
 metadata.create_all(engine)
@@ -36,17 +36,34 @@ def get_history(client_id, msisdn):
     return system_msg + history_messages
 
 
-def get_api_key():
-    conf = cfg_load.load(config_path)
-    key = random.choice(conf.get('keys'))
+def is_premium(msisdn):
+    last_payment = get_last_payment(msisdn)
+    if not last_payment:
+        return False
+    last_amount = last_payment.amount
+    return last_amount == 150
+    # if premium:
+    #     add_premium(msisdn)
+
+
+def get_api_key(premium=False):
+    if premium:
+        resp = get_paid_for_key()
+        if not resp:
+            logger.error('ERROR: No key was found. ')
+            raise NotImplementedError('API Keys were not found in database')
+        key = resp.key
+    else:
+        conf = cfg_load.load(config_path)
+        key = random.choice(conf.get('keys'))
     if not key:
         logger.error('ERROR: No key was found. ')
         raise NotImplementedError('API Keys were not found on configs')
     return key
 
 
-def generate_response(chat_history: List[Dict], current_prompt: str):
-    api_key = get_api_key()
+def generate_response(chat_history: List[Dict], current_prompt: str, premium=False):
+    api_key = get_api_key(premium)
     chat_history.append({'role': 'user', 'content': current_prompt})
     logger.info(f"Generating response: api_key -> {api_key} history_length -> {len(chat_history)} ...")
     response = openai.ChatCompletion.create(
@@ -62,18 +79,20 @@ def can_get_response(msisdn, client_id):
     if not msisdn.startswith('254'):
         send_notification(client_id, msisdn, message='The bot is temporarily not available in your country. '
                                                      'We are working to restore services. Kindly check back later')
-        return bool(int(os.getenv('ALLOW_NON_KENYANS', '0')))
+        return bool(int(os.getenv('ALLOW_NON_KENYANS', '0'))), False
     credits_count = int(check_paid_status(msisdn))
     logger.info(f'Credits Balance : {credits_count}')
-    if credits_count == -1 or credits_count > 0:
-        return True
+    if credits_count == -1:
+        return True, True
+    if credits_count > 0:
+        return True, False
     if credits_count == -2:
         notify_trial_period_over(msisdn, client_id)
     elif credits_count == -5:
         notify_subscription_expired_renew(msisdn, client_id)
     else:
         notify_depleted_free_responses(msisdn, client_id)
-    return False
+    return False, False
 
 
 def notify_depleted_free_responses(msisdn, client_id):
@@ -114,11 +133,16 @@ def handle_prompt(msisdn, text, client_id):
         return
     if msisdn in os.getenv('BLOCKED_USERS').split(","):
         return
-    if not can_get_response(msisdn, client_id):
+
+    has_credits, has_paid = can_get_response(msisdn, client_id)
+    if not has_credits:
+        # user has no credits.
         return
 
+    is_prem = is_premium(msisdn)
+    logger.info(f"#### user is premium -> {is_prem}")
     try:
-        response = generate_response(get_history(client_id, msisdn), text)
+        response = generate_response(get_history(client_id, msisdn), text, premium=is_prem)
         logger.info(f'response: {response}')
         if 'goodbye' in response:
             sn_id = str(datetime.datetime.now().timestamp())

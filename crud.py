@@ -1,7 +1,9 @@
-from sqlalchemy import select, text
+import random
+
+from sqlalchemy import select, text, func
 
 from constants import engine, logger
-from db import users, payments, messages, stk_waiting
+from db import users, payments, messages, stk_waiting, openai_keys
 from schema import UserBase, PaymentBase
 
 
@@ -207,3 +209,14 @@ def get_number_of_days_used_not_paid(msisdn):
         return total_days
     finally:
         db.close()
+
+
+def get_paid_for_key():
+    db = get_db()
+    stmt = select(openai_keys)\
+        .where(openai_keys.c.enabled == True)
+    result = db.execute(stmt).fetchall()
+    db.close()
+
+    key = random.choice(result)
+    return key
