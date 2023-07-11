@@ -12,7 +12,7 @@ from constants import DEPLETED_CREDITS_MESSAGE, UPGRADE_AMOUNT, engine, r, confi
 from crud import get_messages, save_messages, get_paid_for_key, get_last_payment
 from db import metadata
 from helpers import check_paid_status, add_depleted, get_session_id, decrement_response_count, \
-    add_to_expired_and_notified, send_notification, add_to_subscription_expired_and_notified, add_premium
+    add_to_expired_and_notified, send_notification, add_to_subscription_expired_and_notified
 from wp import send_message_base
 
 metadata.create_all(engine)
