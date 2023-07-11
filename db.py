@@ -57,7 +57,7 @@ stk_waiting = Table('stk_waiting', metadata,
 
 openai_keys = Table('openai_keys', metadata,
                     Column('id', Integer, primary_key=True, autoincrement=True),
-                    Column('key', String(20), index=True),
+                    Column('key', String(150), index=True),
                     Column('comment', String(200), nullable=True),
                     Column('enabled', Boolean, default=True),
                     Column('date_created', DateTime(timezone=True), server_default=func.now()),
