@@ -157,11 +157,10 @@ def handle_prompt(msisdn, text, client_id):
         pattern = '|'.join(string_list)
         if re.search(pattern, str(e)):
             send_notification(client_id, msisdn, message=ERROR_GENERATING_RESPONSE)
-            return ''
+            sn_id = str(datetime.datetime.now().timestamp())
+            r.set(rk, sn_id)
+            raise
 
-        sn_id = str(datetime.datetime.now().timestamp())
-        r.set(rk, sn_id)
-        raise
     else:
         new_msgs = [
             {'role': 'user', 'content': text, 'msisdn': msisdn,
