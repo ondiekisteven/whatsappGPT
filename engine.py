@@ -135,11 +135,18 @@ def handle_prompt(msisdn, text, client_id):
         return
 
     has_credits, has_paid = can_get_response(msisdn, client_id)
+
+    if os.getenv('ENABLE_FREE_MODE', 1):
+        logger.info("FREE MODE ACTIVATED")
+        has_credits, has_paid = True, True
     if not has_credits:
         # user has no credits.
         return
 
     is_prem = is_premium(msisdn)
+    if os.getenv('ENABLE_FREE_MODE', '1'):
+        logger.info("FREE MODE ACTIVATED")
+        is_prem = True
     logger.info(f"#### user is premium -> {is_prem}")
     try:
         response = generate_response(get_history(client_id, msisdn), text, premium=is_prem)
