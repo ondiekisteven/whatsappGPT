@@ -134,11 +134,12 @@ def handle_prompt(msisdn, text, client_id):
     if msisdn in os.getenv('BLOCKED_USERS').split(","):
         return
 
-    has_credits, has_paid = can_get_response(msisdn, client_id)
-
     if os.getenv('ENABLE_FREE_MODE', 1):
         logger.info("FREE MODE ACTIVATED")
         has_credits, has_paid = True, True
+    else:
+        has_credits, has_paid = can_get_response(msisdn, client_id)
+
     if not has_credits:
         # user has no credits.
         return
