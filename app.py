@@ -188,3 +188,49 @@ def index():
     else:
         logger.warning("Method Not Allowed")
     return {'message': 'success'}
+
+
+@app.route("/v2/messages", methods=["GET", "POST"])
+def v2_messages_view():
+    msg_payload = request.json
+    logger.info("-----------------V2 MESSAGE---------------------------")
+    logger.info(msg_payload)
+    try:
+        data = {
+            "from": msg_payload.get('body').get('key').get('remoteJid').split("@")[0],
+            "body": msg_payload.get('body').get('message').get('conversation'),
+
+            "ack": 1,
+            "client_id": msg_payload.get('instanceKey'),
+            "to": '',
+            "sender": {
+                "name": msg_payload.get('body').get('pushName'),
+            }
+        }
+        kwargs = {'msisdn': data['from'], 'text': data.get('body'), 'client_id': data.get('client_id')}
+        body = data.get('body')
+        client_id = data.get('client_id')
+        msisdn = data.get('from')
+
+        if body.upper().startswith('REF') and ' ' not in body:
+            q.enqueue(handle_referral_msg, args=(d,))
+            # handle_referral_msg(d)
+            return {'message': 'success'}
+        if body.upper() in ['STOP', 'HI']:
+            sn_id = str(datetime.now().timestamp())
+            r.set(f'{client_id}:{msisdn}', sn_id)
+            if body.upper() == 'STOP':
+                return {'message': 'stopped'}
+        _body = body.lower().split(" ")[0]
+        if _body in ['/pay', 'pay', '.pay']:
+            q.enqueue(handle_pay_prompt, kwargs=kwargs)
+            # handle_pay_prompt(**kwargs)
+
+        elif _body in ['/code']:
+            q.enqueue(handle_getting_code, args=(data,))
+        else:
+            q.enqueue(handle_prompt, kwargs=kwargs, retry=Retry(max=4, interval=60))
+        return {'message': 'success'}
+    except Exception as x:
+        logger.exception(x)
+        return {'error': str(x)}
