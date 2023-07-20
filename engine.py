@@ -126,7 +126,7 @@ def notify_subscription_expired_renew(msisdn, client_id):
     logger.info(f"user ({msisdn}) subscription has expired and has already been notified")
 
 
-def handle_prompt(msisdn, text, client_id):
+def handle_prompt(msisdn, text, client_id, version):
     rk = f'{client_id}:{msisdn}'
     if r.hexists(BOT_NUMBERS, msisdn):
         logger.error('-----------cannot process requests by bots----------')
@@ -164,7 +164,7 @@ def handle_prompt(msisdn, text, client_id):
 
         pattern = '|'.join(string_list)
         if re.search(pattern, str(e)):
-            send_notification(client_id, msisdn, message=ERROR_GENERATING_RESPONSE)
+            send_notification(client_id, msisdn, message=ERROR_GENERATING_RESPONSE, version=version)
             sn_id = str(datetime.datetime.now().timestamp())
             r.set(rk, sn_id)
             raise
@@ -177,6 +177,6 @@ def handle_prompt(msisdn, text, client_id):
              'session_id': get_session_id(client_id, msisdn), 'client_id': client_id},
         ]
         decrement_response_count(msisdn)
-        high.enqueue(send_message_base, args=(client_id, msisdn, response))
+        high.enqueue(send_message_base, args=(client_id, msisdn, response, version))
         save_messages(new_msgs)
         return response

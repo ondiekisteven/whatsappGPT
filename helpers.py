@@ -16,7 +16,7 @@ from schema import UserBase
 from wp import send_message_base
 
 
-def send_notification(client_id, msisdn, session_id=None, message=None):
+def send_notification(client_id, msisdn, version, session_id=None, message=None):
     if not client_id or client_id is None:
         logger.warning("NO CLIENT ID FOUND. CAN NOT SEND NOTIFICATION")
         return
@@ -26,7 +26,7 @@ def send_notification(client_id, msisdn, session_id=None, message=None):
         {'role': 'notification', 'content': message, 'msisdn': msisdn,
          'session_id': f'NOTIF-{session_id}', 'client_id': client_id}
     ]
-    send_message_base(client_id, msisdn, message)
+    send_message_base(client_id, msisdn, message, version=version)
     save_messages(new_msgs)
 
 
@@ -249,7 +249,7 @@ def handle_save_user(data: dict):
             crud.add_upline(msisdn, upline_id)
 
 
-def handle_referral_msg(data: dict):
+def handle_referral_msg(data: dict, version):
     referral_code = data.get('body').split(' ')[0]
     referer = crud.get_user_by_referral_code(referral_code)
     msisdn = data.get('from').split('@')[0]
@@ -258,7 +258,7 @@ def handle_referral_msg(data: dict):
     # if referral code is not associated with any user
     if not referer:
         send_notification(
-            client_id=client_id, msisdn=msisdn, message=REFERRAL_CODE_NOT_FOUND_MESSAGE)
+            client_id=client_id, msisdn=msisdn, message=REFERRAL_CODE_NOT_FOUND_MESSAGE, version=version)
         logger.error(f'Referral Code Not Found. Code: {referral_code}, ')
         return
 
@@ -270,13 +270,13 @@ def handle_referral_msg(data: dict):
         # user already has a referer, we discard any subsequent requests
         logger.warning('User already has an invite. Cannot use referral code again')
         send_notification(
-            client_id=client_id, msisdn=msisdn, message=USER_HAS_ANOTHER_INVITE_MESSAGE)
+            client_id=client_id, msisdn=msisdn, message=USER_HAS_ANOTHER_INVITE_MESSAGE, version=version)
         return
 
     if crud.get_number_of_days_used_not_paid(msisdn) > 2:
         logger.info("User has used the bot more than 2 days. They cannot add an invite code to their account")
         send_notification(
-            client_id=client_id, msisdn=msisdn, message=USER_MORE_THAN_2_DAYS_MESSAGE
+            client_id=client_id, msisdn=msisdn, message=USER_MORE_THAN_2_DAYS_MESSAGE, version=version
         )
         return
 
@@ -288,11 +288,11 @@ def handle_referral_msg(data: dict):
         referer_msisdn=referer.msisdn,
         credits_count=FREE_RESPONSES,
         free_trial=FREE_TRIAL
-    ))
+    ), version=version)
     send_notification(client_id, referer.msisdn, message=DOWNLINE_ADDED_MESSAGE.format(
         downline_msisdn=msisdn,
         downlines_count=crud.get_downlines_count(referer.id)
-    ))
+    ), version=version)
     logger.info("Done processing user...")
 
 
@@ -305,5 +305,5 @@ def handle_getting_code(data: dict):
     Copy the code and send it to users to invite them 
     
     *NOTE: ASK USERS TO SEND THE INVITE CODE AT LEAST TWICE. TELL USERS TO SEND THE MESSAGE TWICE TO THE BOT FOR THE CODE TO REFLECT CORRECTLY*
-    """)
-    send_notification(data.get('client_id'), data.get('from'), message=code.referral_code)
+    """, version=version)
+    send_notification(data.get('client_id'), data.get('from'), message=code.referral_code, version=version)

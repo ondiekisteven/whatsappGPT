@@ -98,7 +98,7 @@ class V2Whatsapp:
         return resp
 
 
-def send_message_base(client_id, chat_id, message, version=2):
+def send_message_base(client_id, chat_id, message, version):
     if version == 2:
         return send_msg_new(client_id, chat_id, message)
     headers = {

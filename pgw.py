@@ -37,7 +37,7 @@ class TinyPesa:
         return False
 
 
-def handle_pay_prompt(msisdn, text, client_id):
+def handle_pay_prompt(msisdn, text, client_id, version):
     if text.lower() in ['/pay', 'pay', '.pay']:
         payment_no = msisdn
     else:
@@ -63,7 +63,7 @@ def handle_pay_prompt(msisdn, text, client_id):
             {'role': 'notification', 'content': resp_msg, 'msisdn': msisdn, 'session_id': get_session_id(
                 client_id, msisdn)},
         ]
-        high.enqueue(send_message_base, args=(client_id, msisdn, resp_msg))
+        high.enqueue(send_message_base, args=(client_id, msisdn, resp_msg, version))
         save_messages(new_msgs)
     else:
         resp_msg = 'Error sending stk push to your phone. Please try again after some time.'
@@ -71,5 +71,5 @@ def handle_pay_prompt(msisdn, text, client_id):
             {'role': 'notification', 'content': resp_msg, 'msisdn': msisdn, 'session_id': get_session_id(
                 client_id, msisdn)},
         ]
-        high.enqueue(send_message_base, args=(client_id, msisdn, resp_msg))
+        high.enqueue(send_message_base, args=(client_id, msisdn, resp_msg, version))
         save_messages(new_msgs)

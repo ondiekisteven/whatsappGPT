@@ -166,9 +166,9 @@ def index():
                 return jsonify({'message': 'not handling groups'})
 
         msisdn = from_.split('@')[0]
-        kwargs = {'msisdn': msisdn, 'text': body, 'client_id': client_id}
+        kwargs = {'msisdn': msisdn, 'text': body, 'client_id': client_id, 'version': 1}
         if body.upper().startswith('REF') and ' ' not in body:
-            q.enqueue(handle_referral_msg, args=(d,))
+            q.enqueue(handle_referral_msg, args=(d, 1))
             # handle_referral_msg(d)
             return {'message': 'success'}
         if body.upper() in ['STOP', 'HI']:
@@ -207,13 +207,13 @@ def v2_messages_view():
                 "name": msg_payload.get('body').get('pushName'),
             }
         }
-        kwargs = {'msisdn': data['from'], 'text': data.get('body'), 'client_id': data.get('client_id')}
+        kwargs = {'msisdn': data['from'], 'text': data.get('body'), 'client_id': data.get('client_id'), 'version': 2}
         body = data.get('body')
         client_id = data.get('client_id')
         msisdn = data.get('from')
 
         if body.upper().startswith('REF') and ' ' not in body:
-            q.enqueue(handle_referral_msg, args=(d,))
+            q.enqueue(handle_referral_msg, args=(data, 2))
             # handle_referral_msg(d)
             return {'message': 'success'}
         if body.upper() in ['STOP', 'HI']:
