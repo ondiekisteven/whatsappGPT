@@ -211,7 +211,7 @@ def v2_messages_view():
         body = data.get('body')
         client_id = data.get('client_id')
         msisdn = data.get('from')
-
+        logger.info(f"REQUEST: {data}")
         if body.upper().startswith('REF') and ' ' not in body:
             q.enqueue(handle_referral_msg, args=(data, 2))
             # handle_referral_msg(d)

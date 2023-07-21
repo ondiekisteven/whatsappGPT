@@ -1,62 +1,64 @@
-version: "3.7"
-
+version: '3.8'
 
 services:
-
-  chatgpt:
+  new_whatsapp:
     build:
-      context: .
+      context: ./whatsapp_websocket
       dockerfile: Dockerfile
-
-#    command: gunicorn app:app --bind 0.0.0.0:5000 --workers 2 --access-logfile /app/logs/chatgpt.log
-    command: flask run --host=0.0.0.0 --port=5000
-
-    ports:
-      - "5009:5000"
+      args:
+        - PORT=${PORT}
     restart: always
+    env_file: .env
+    ports:
+      - ${PORT}:${PORT}
+    environment:
+      - TOKEN=${TOKEN}
+      - PORT=${PORT}
+      - MONGODB_ENABLED=${MONGODB_ENABLED}
+      - MONGODB_URL=${MONGODB_URL}
+      - WEBHOOK_ENABLED=${WEBHOOK_ENABLED}
+      - WEBHOOK_URL=${WEBHOOK_URL}
+      - WEBHOOK_BASE64=${WEBHOOK_BASE64}
+    #        volumes:
+    #            - ./whatsapp_websocket/:/home/node/app
+    #            - ./whatsapp_websocket/node_modules/:/home/node/app/node_modules/
+    networks:
+      - whatsapp-network
+
+  webhooks_api:
+    restart: always
+    command: gunicorn main:app --workers 1 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --error-logfile - --access-logfile -
+    build:
+      context: ./api
+      dockerfile: Dockerfile
     env_file:
       - .env
     volumes:
-    - ./logs/:/app/logs/
+      - ./logging.conf:/app/logging.conf
+      - ./api/:/app/
     networks:
       - whatsapp-network
+    ports:
+      - '8006:8000'
 
-  default_worker:
+  consumer:
+    restart: always
+    command: python consumer.py
     build:
-        context: .
-        dockerfile: Workers.Dockerfile
-    command: rq worker default
-    env_file:
-      - ./.env
-    networks:
-      - whatsapp-network
+      context: ./consumers
+      dockerfile: Dockerfile
     deploy:
-      replicas: 2
-
-  command:
-    build:
-        context: .
-        dockerfile: Workers.Dockerfile
-    command: /bin/bash
+      mode: replicated
+      replicas: 3
     env_file:
-      - ./.env
-    volumes:
-      - ./logs/:/app/logs/
+      - .env
     networks:
       - whatsapp-network
 
-  high_worker:
-    build:
-        context: .
-        dockerfile: Workers.Dockerfile
-    command: rq worker high
-    env_file:
-      - ./.env
-    volumes:
-      - ./logs/:/app/logs/
-    networks:
-      - whatsapp-network
 
 networks:
   whatsapp-network:
     external: true
+
+
+
