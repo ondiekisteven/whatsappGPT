@@ -202,8 +202,9 @@ def v2_messages_view():
             logger.exception(x)
             msg = msg_payload.get('body').get('message').get('conversation')
 
+        from_, server = msg_payload.get('body').get('key').get('remoteJid').split("@")
         data = {
-            "from": msg_payload.get('body').get('key').get('remoteJid').split("@")[0],
+            "from": from_,
             "body": msg,
             "ack": 1,
             "client_id": msg_payload.get('instanceKey'),
@@ -212,11 +213,40 @@ def v2_messages_view():
                 "name": msg_payload.get('body').get('pushName'),
             }
         }
+
         kwargs = {'msisdn': data['from'], 'text': data.get('body'), 'client_id': data.get('client_id'), 'version': 2}
         body = data.get('body')
         client_id = data.get('client_id')
         msisdn = data.get('from')
         logger.info(f"REQUEST: {data}")
+
+        if server == 'g.us':
+            return {'message': 'not processing groups'}
+            if from_ not in os.environ.get('SUPPORT_GROUPS', '120363127313593286@g.us').split(','):
+                return jsonify({'message': 'not handling groups'})
+            sim_values = [d for d in body.split(' ') if d]
+            sim_no = sim_values[0]
+            from_ = parse_msisdn(sim_no, log=False)
+            if not from_:
+                return jsonify({'message': 'not handling groups'})
+            from_ += '@s.whatsapp.net'
+            body = ' '.join(sim_values[1:])
+
+            # get client_id from the author of the message
+            author = msg_payload.get('body').get('key').get('participant').split("@")
+            client_id = r.hget(BOT_NUMBERS, author)
+            if not client_id:
+                logger.error(f'No client id found for simulated message. author -> {author}')
+                return jsonify({'message': 'not handling groups'})
+
+            # save message_id to prevent processing it again
+            msg_id = d.get('id')
+            logger.info(f'simulation message id -> {msg_id}')
+            added = add_simulated_msg_id(msg_id)
+            if not added:
+                logger.info("Simulation Message not inserted. Probably it has been processed before")
+                return jsonify({'message': 'not handling groups'})
+
         if body.upper().startswith('REF') and ' ' not in body:
             q.enqueue(handle_referral_msg, args=(data, 2))
             # handle_referral_msg(d)
