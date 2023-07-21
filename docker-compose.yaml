@@ -1,64 +1,62 @@
-version: '3.8'
+version: "3.7"
+
 
 services:
-  new_whatsapp:
-    build:
-      context: ./whatsapp_websocket
-      dockerfile: Dockerfile
-      args:
-        - PORT=${PORT}
-    restart: always
-    env_file: .env
-    ports:
-      - ${PORT}:${PORT}
-    environment:
-      - TOKEN=${TOKEN}
-      - PORT=${PORT}
-      - MONGODB_ENABLED=${MONGODB_ENABLED}
-      - MONGODB_URL=${MONGODB_URL}
-      - WEBHOOK_ENABLED=${WEBHOOK_ENABLED}
-      - WEBHOOK_URL=${WEBHOOK_URL}
-      - WEBHOOK_BASE64=${WEBHOOK_BASE64}
-    #        volumes:
-    #            - ./whatsapp_websocket/:/home/node/app
-    #            - ./whatsapp_websocket/node_modules/:/home/node/app/node_modules/
-    networks:
-      - whatsapp-network
 
-  webhooks_api:
-    restart: always
-    command: gunicorn main:app --workers 1 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --error-logfile - --access-logfile -
+  chatgpt:
     build:
-      context: ./api
+      context: .
       dockerfile: Dockerfile
+
+#    command: gunicorn app:app --bind 0.0.0.0:5000 --workers 2 --access-logfile /app/logs/chatgpt.log
+    command: flask run --host=0.0.0.0 --port=5000
+
+    ports:
+      - "5009:5000"
+    restart: always
     env_file:
       - .env
     volumes:
-      - ./logging.conf:/app/logging.conf
-      - ./api/:/app/
+    - ./logs/:/app/logs/
     networks:
       - whatsapp-network
-    ports:
-      - '8006:8000'
 
-  consumer:
-    restart: always
-    command: python consumer.py
+  default_worker:
     build:
-      context: ./consumers
-      dockerfile: Dockerfile
-    deploy:
-      mode: replicated
-      replicas: 3
+        context: .
+        dockerfile: Workers.Dockerfile
+    command: rq worker default
     env_file:
-      - .env
+      - ./.env
+    networks:
+      - whatsapp-network
+    deploy:
+      replicas: 2
+
+  command:
+    build:
+        context: .
+        dockerfile: Workers.Dockerfile
+    command: /bin/bash
+    env_file:
+      - ./.env
+    volumes:
+      - ./logs/:/app/logs/
     networks:
       - whatsapp-network
 
+  high_worker:
+    build:
+        context: .
+        dockerfile: Workers.Dockerfile
+    command: rq worker high
+    env_file:
+      - ./.env
+    volumes:
+      - ./logs/:/app/logs/
+    networks:
+      - whatsapp-network
 
 networks:
   whatsapp-network:
     external: true
-
-
-
