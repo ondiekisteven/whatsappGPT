@@ -197,6 +197,10 @@ def v2_messages_view():
     logger.info(msg_payload)
     if msg_payload.get('type') != 'message':
         return {'message': 'not a message'}
+
+    if msg_payload.get('body').get('key').get('fromMe'):
+        logger.info("This is a self message. nothing to do")
+        return {'message': 'not replying to own messages'}
     try:
         try:
             msg = msg_payload.get('body').get('message').get('extendedTextMessage').get('text')
