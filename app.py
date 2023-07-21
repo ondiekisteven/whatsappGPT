@@ -196,8 +196,10 @@ def v2_messages_view():
     logger.info("-----------------V2 MESSAGE---------------------------")
     logger.info(msg_payload)
     try:
-        msg = msg_payload.get('body').get('message').get('extendedTextMessage').get('text')
-        if not msg:
+        try:
+            msg = msg_payload.get('body').get('message').get('extendedTextMessage').get('text')
+        except Exception as x:
+            logger.exception(x)
             msg = msg_payload.get('body').get('message').get('conversation')
 
         data = {
