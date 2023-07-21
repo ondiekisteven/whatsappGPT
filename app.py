@@ -195,6 +195,8 @@ def v2_messages_view():
     msg_payload = request.json
     logger.info("-----------------V2 MESSAGE---------------------------")
     logger.info(msg_payload)
+    if msg_payload.get('type') != 'message':
+        return {'message': 'not a message'}
     try:
         try:
             msg = msg_payload.get('body').get('message').get('extendedTextMessage').get('text')
