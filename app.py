@@ -196,10 +196,10 @@ def v2_messages_view():
     logger.info("-----------------V2 MESSAGE---------------------------")
     logger.info(msg_payload)
     try:
-        if msg_payload.get('body').get('message').get('conversation'):
-            msg = msg_payload.get('body').get('message').get('extendedTextMessage').get('text')
-        else:
+        msg = msg_payload.get('body').get('message').get('extendedTextMessage').get('text')
+        if not msg:
             msg = msg_payload.get('body').get('message').get('conversation')
+
         data = {
             "from": msg_payload.get('body').get('key').get('remoteJid').split("@")[0],
             "body": msg,
