@@ -29,7 +29,7 @@ def get_history(client_id, msisdn):
                    ' they will enter their M-Pesa pin to confirm payment and once we receive it, you will send them a '
                    'confirmation message. They can then use you services for a whole month. You are a helpful assistant'
                    ' who can help them do their assignments, research and having fun. You are polite and give short and'
-                   'precise responses'
+                   'precise responses. You can not work with images or other media except text only'
     }]
     history_messages = [
         {'role': msg[3], 'content': msg[4]} for msg in history if msg[3] in ['system', 'assistant', 'user']]
