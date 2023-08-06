@@ -51,7 +51,8 @@ stk_waiting = Table('stk_waiting', metadata,
                     Column('client_id', String(20)),
                     Column('amount', Integer),
                     Column('target', String(20)),
-                    Column('fulfilled', Boolean, default=False)
+                    Column('fulfilled', Boolean, default=False),
+                    Column('version', Integer, default=1)
                     )
 
 

@@ -134,10 +134,16 @@ def save_messages(msg_objs: list):
         db.close()
 
 
-def save_stk_waiting(msisdn, client_id, amount, target):
+def save_stk_waiting(msisdn, client_id, amount, target, version=2):
     db = get_db()
     try:
-        db.execute(stk_waiting.insert(), {'msisdn': msisdn, 'client_id': client_id, 'amount': amount, 'target': target})
+        db.execute(stk_waiting.insert(), {
+            'msisdn': msisdn,
+            'client_id': client_id,
+            'amount': amount,
+            'target': target,
+            'version': version
+        })
     except Exception as x:
         logger.exception(x)
         db.rollback()

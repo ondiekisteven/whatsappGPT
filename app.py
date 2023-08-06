@@ -56,17 +56,19 @@ def payment_view():
                 reply_to = error_msisdn
 
             send_notification(
-                client_id,
-                reply_to,
-                get_session_id(client_id, error_msisdn),
-                f'*An Error Occurred When Processing Your Payment:*: \n\n\n{error_desc}'
+                version=waiting.version,
+                client_id=client_id,
+                msisdn=reply_to,
+                session_id=get_session_id(client_id, error_msisdn),
+                message=f'*An Error Occurred When Processing Your Payment:*: \n\n\n{error_desc}',
             )
             if reply_to != error_msisdn:
                 send_notification(
-                    client_id,
-                    error_msisdn,
-                    get_session_id(client_id, error_msisdn),
-                    f'*An Error Occurred When Processing Your Payment:*: \n\n\n{error_desc}'
+                    version=waiting.version,
+                    client_id=client_id,
+                    msisdn=error_msisdn,
+                    session_id=get_session_id(client_id, error_msisdn),
+                    message=f'*An Error Occurred When Processing Your Payment:*: \n\n\n{error_desc}'
                 )
             # is not a successful payment
             return {'message': 'success'}
@@ -90,10 +92,12 @@ def payment_view():
                 crud.mark_stk_waiting_fulfilled(waiting.id)
                 client_id = waiting.client_id
                 target = waiting.target
+                version = waiting.version
             else:
                 logger.warning("Payment has no matching waiting record. Using Default Client ID")
                 client_id = os.getenv('DEFAULT_CLIENT_ID')
                 target = payment.msisdn
+                version = 2
 
             logger.info(f"Adding {target} to paid users")
 
@@ -106,6 +110,7 @@ def payment_view():
             send_notification(
                 client_id,
                 payment.msisdn,
+                version,
                 get_session_id(client_id, payment.msisdn),
                 PAYMENT_RECEIVED_MESSAGE.format(
                     amount=payment.amount,
