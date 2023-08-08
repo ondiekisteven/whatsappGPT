@@ -325,11 +325,11 @@ def handle_lesson_subscription(msisdn, name, text, client_id, version):
         "msisdn": msisdn,
     }
     if commands[0] == '.join':
-        # subscribing to the lesson
+        logger.info(f"{msisdn} joining...")
         payload['active'] = True
 
     elif commands[0] == '.stop':
-        # unsubscribing
+        logger.info(f"unsubscribing {msisdn}...")
         payload['active'] = False
 
     else:
