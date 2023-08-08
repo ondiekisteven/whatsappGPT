@@ -313,7 +313,7 @@ def handle_getting_code(data: dict, version):
 def request_subscription(payload):
     res = requests.post(os.getenv('LESSON_SUBSCRIPTION_API'), json=payload)
     logger.info(f"Subscribe Response -> {res.status_code} : {res.text}")
-    return res == 200
+    return res in [200, 201]
 
 
 def handle_lesson_subscription(msisdn, name, text, client_id, version):
