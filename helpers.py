@@ -4,13 +4,14 @@ import random
 import string
 
 import phonenumbers
+import requests
 from phonenumbers import NumberParseException
 
 import crud
 from constants import r, NOT_PAID, DEPLETED, PAID, FREE_RESPONSES, BOT_NUMBERS, SIMULATED, EXPIRED, FREE_TRIAL, \
     EXPIRED_NOTIFIED, SUBSCRIPTION_EXPIRED_NOTIFIED, USERS, REFERRAL_CODES, REFERRAL_CODE_NOT_FOUND_MESSAGE, \
     USER_HAS_ANOTHER_INVITE_MESSAGE, USER_MORE_THAN_2_DAYS_MESSAGE, UPLINE_ADDED_MESSAGE, DOWNLINE_ADDED_MESSAGE, \
-    logger, PREMIUM_USERS
+    logger, LESSON_SUBSCRIBED, LESSON_UNSUBSCRIBED, LESSON_ACTION_ERROR
 from crud import save_messages
 from schema import UserBase
 from wp import send_message_base
@@ -296,7 +297,7 @@ def handle_referral_msg(data: dict, version):
     logger.info("Done processing user...")
 
 
-def handle_getting_code(data: dict):
+def handle_getting_code(data: dict, version):
     msisdn = data.get('from').split("@")[0]
     code = crud.get_user_by_msisdn(msisdn)
     send_notification(data.get('client_id'), data.get('from'), message=f"""
@@ -307,3 +308,40 @@ def handle_getting_code(data: dict):
     *NOTE: ASK USERS TO SEND THE INVITE CODE AT LEAST TWICE. TELL USERS TO SEND THE MESSAGE TWICE TO THE BOT FOR THE CODE TO REFLECT CORRECTLY*
     """, version=version)
     send_notification(data.get('client_id'), data.get('from'), message=code.referral_code, version=version)
+
+
+def request_subscription(payload):
+    res = requests.post(os.getenv('LESSON_SUBSCRIPTION_API'), json=payload)
+    logger.info(f"Subscribe Response -> {res.status_code} : {res.text}")
+    return res == 200
+
+
+def handle_lesson_subscription(msisdn, name, text, client_id, version):
+    commands = [t for t in text.lower().spilit(" ") if t]
+    payload = {
+        "name": name,
+        "msisdn": msisdn,
+    }
+    if commands[0] == '.join':
+        # subscribing to the lesson
+        payload['active'] = True
+
+    elif commands[0] == '.stop':
+        # unsubscribing
+        payload['active'] = False
+
+    else:
+        # unknown command
+        logger.info("Invalid Command Nothing to do")
+        return
+
+    if commands[1] == 'lesson':
+        success = request_subscription(payload)
+        if success:
+            if payload['active']:
+                send_notification(client_id, msisdn, version, message=LESSON_SUBSCRIBED.format(name=name))
+            else:
+                send_notification(client_id, msisdn, version, message=LESSON_UNSUBSCRIBED.format(name=name))
+
+        else:
+            send_notification(client_id, msisdn, version, message=LESSON_ACTION_ERROR)

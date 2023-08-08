@@ -11,8 +11,7 @@ from rq import Queue, Retry
 import crud
 from constants import PAYMENT_RECEIVED_MESSAGE, BOT_NUMBERS
 from engine import r, handle_prompt
-from helpers import send_notification, get_session_id, add_paid, parse_msisdn, add_simulated_msg_id, update_clients, \
-    handle_referral_msg, handle_getting_code
+from helpers import *
 from pgw import handle_pay_prompt
 from schema import PaymentBase
 
@@ -187,7 +186,7 @@ def index():
             # handle_pay_prompt(**kwargs)
 
         elif _body in ['/code']:
-            q.enqueue(handle_getting_code, args=(d,))
+            q.enqueue(handle_getting_code, args=(d, 1))
         else:
             q.enqueue(handle_prompt, kwargs=kwargs, retry=Retry(max=4, interval=60))
     else:
@@ -258,6 +257,10 @@ def v2_messages_view():
                 logger.info("Simulation Message not inserted. Probably it has been processed before")
                 return jsonify({'message': 'not handling groups'})
 
+        if body.lower().startswith('.join') or body.lower().startswith('.stop'):
+            q.enqueue(handle_lesson_subscription, args=(msisdn, data.get('sender').get('name'), body, client_id, 2))
+            return {'message': 'success'}
+
         if body.upper().startswith('REF') and ' ' not in body:
             q.enqueue(handle_referral_msg, args=(data, 2))
             # handle_referral_msg(d)
@@ -273,7 +276,7 @@ def v2_messages_view():
             # handle_pay_prompt(**kwargs)
 
         elif _body in ['/code']:
-            q.enqueue(handle_getting_code, args=(data,))
+            q.enqueue(handle_getting_code, args=(data, 2))
         else:
             q.enqueue(handle_prompt, kwargs=kwargs, retry=Retry(max=4, interval=60))
         return {'message': 'success'}
