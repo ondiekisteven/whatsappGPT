@@ -317,7 +317,7 @@ def request_subscription(payload):
 
 
 def handle_lesson_subscription(msisdn, name, text, client_id, version):
-    commands = [t for t in text.lower().spilit(" ") if t]
+    commands = [t for t in text.lower().split(" ") if t]
     payload = {
         "name": name,
         "msisdn": msisdn,
