@@ -178,8 +178,7 @@ An error occurred when generating a response. We apologize for that. Please try 
 Thank you for using Sonia AI 
 """
 
-LESSON_SUBSCRIBED = """
-Greetings {name}, You have successfully subscribed to Pipeline Lesson Forum. 
+LESSON_SUBSCRIBED = """Greetings {name}, You have successfully subscribed to Pipeline Lesson Forum. 
 You will be receiving a summary of each day's lesson at 5:00 a.m daily. 
 
 The summary is just to help you know the main points talked about in the lesson for the day. 
@@ -187,21 +186,26 @@ Please take your time to study the lesson and refer to the bible for a deeper un
 
 Happy Studying🙏
 
-To unsubscribe from the program, send this message: .stop lesson
+To unsubscribe from the program, send this message👇: 
+
+.stop lesson
 """
 
-LESSON_UNSUBSCRIBED = """
-Greetings {name}, You have been unsubscribed to Pipeline Lesson Forum and will not be receiving the daily lesson summary 
+LESSON_UNSUBSCRIBED = """Greetings {name}, You have been unsubscribed from Pipeline Lesson Forum and will not be receiving the daily lesson summary 
+
 It is sad to see you leave.
+
 If there is anything we can do to make your experience better, we would appreciate your feedback. 
 You can send your feedback or suggestion to this number: +254790670635
  
-To join the program again, send this message: .join lesson
+To join the program again, send this message👇:
+
+.join lesson
 
 👋
+-_Sonia AI_
 """
-LESSON_ACTION_ERROR = """
-An error occurred when processing your request.
+LESSON_ACTION_ERROR = """An error occurred when processing your request.
 Kindly try sending your message again after a few minutes. 
 
 If the error persists, report the issue to +254790670635
