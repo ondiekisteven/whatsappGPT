@@ -12,7 +12,7 @@ import crud
 from constants import PAYMENT_RECEIVED_MESSAGE, BOT_NUMBERS
 from engine import r, handle_prompt
 from helpers import send_notification, get_session_id, add_paid, parse_msisdn, add_simulated_msg_id, \
-    handle_referral_msg, handle_getting_code
+    handle_referral_msg, handle_getting_code, handle_lesson_subscription
 from pgw import handle_pay_prompt
 from schema import PaymentBase
 
