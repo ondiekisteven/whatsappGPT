@@ -3,9 +3,8 @@ import os
 import requests
 
 import crud
-from constants import UPGRADE_AMOUNT, STK_PUSH_SENT_MESSAGE, high, logger
-from engine import save_messages
-from helpers import get_session_id, parse_msisdn
+from constants import STK_PUSH_SENT_MESSAGE, high, logger
+from helpers import get_session_id, parse_msisdn, get_upgrade_amount
 from wp import send_message_base
 
 
@@ -50,26 +49,20 @@ def handle_pay_prompt(msisdn, text, client_id, version):
         return
 
     logger.info("Sending stk push")
-    success = TinyPesa(os.getenv('TINYPESA_API_KEY')).stk_push(payment_no, UPGRADE_AMOUNT)
+    currency = get_upgrade_amount(msisdn)
+
+    success = TinyPesa(os.getenv('TINYPESA_API_KEY')).stk_push(payment_no, currency.amount)
     if success:
         # save to stk waiting... we'll use that to know which whatsapp account will be used to reply
         # ... and also who to give access once payment has been made
 
-        crud.save_stk_waiting(msisdn=payment_no, client_id=client_id, amount=UPGRADE_AMOUNT, target=msisdn)
+        crud.save_stk_waiting(msisdn=payment_no, client_id=client_id, amount=currency.amount, target=msisdn)
 
         # tell user we have sent stk push to them
         resp_msg = STK_PUSH_SENT_MESSAGE.format(phone_number=payment_no)
-        new_msgs = [
-            {'role': 'notification', 'content': resp_msg, 'msisdn': msisdn, 'session_id': get_session_id(
-                client_id, msisdn)},
-        ]
-        high.enqueue(send_message_base, args=(client_id, msisdn, resp_msg, version))
-        save_messages(new_msgs)
+        high.enqueue(send_message_base, args=(client_id, msisdn, resp_msg, version, get_session_id(
+            client_id, msisdn), 'notification'))
     else:
         resp_msg = 'Error sending stk push to your phone. Please try again after some time.'
-        new_msgs = [
-            {'role': 'notification', 'content': resp_msg, 'msisdn': msisdn, 'session_id': get_session_id(
-                client_id, msisdn)},
-        ]
-        high.enqueue(send_message_base, args=(client_id, msisdn, resp_msg, version))
-        save_messages(new_msgs)
+        high.enqueue(send_message_base, args=(client_id, msisdn, resp_msg, version, get_session_id(
+            client_id, msisdn), 'notification'))

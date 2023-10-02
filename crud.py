@@ -1,9 +1,9 @@
 import random
 
-from sqlalchemy import select, text, func
+from sqlalchemy import select, text
 
 from constants import engine, logger
-from db import users, payments, messages, stk_waiting, openai_keys
+from db import users, payments, messages, stk_waiting, openai_keys, bot_adverts
 from schema import UserBase, PaymentBase
 
 
@@ -219,10 +219,37 @@ def get_number_of_days_used_not_paid(msisdn):
 
 def get_paid_for_key():
     db = get_db()
-    stmt = select(openai_keys)\
+    stmt = select(openai_keys) \
         .where(openai_keys.c.enabled == True)
     result = db.execute(stmt).fetchall()
     db.close()
 
     key = random.choice(result)
     return key
+
+
+def save_new_advert(advert_name, advert_text, version=2):
+    db = get_db()
+    try:
+        db.execute(bot_adverts.insert(), {
+            'name': advert_name,
+            'advert_text': advert_text,
+        })
+    except Exception as x:
+        logger.exception(x)
+        db.rollback()
+    else:
+        db.commit()
+    finally:
+        db.close()
+
+
+def get_active_adverts():
+    db = get_db()
+    stmt = select(bot_adverts).where(bot_adverts.c.active == True) \
+        .order_by(bot_adverts.c.id)
+    result = db.execute(stmt)
+    data = result.fetchall()
+
+    db.close()
+    return data

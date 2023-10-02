@@ -1,5 +1,6 @@
 import logging.config
 import os
+from collections import namedtuple
 
 import cfg_load
 from redis.client import Redis
@@ -64,19 +65,16 @@ logger = logging.getLogger('engine')
 
 engine = create_db(confg['database'])
 
-from wp import Whatsapp
-
-wa = Whatsapp(os.getenv('API_USERNAME'), os.getenv('API_PASSWORD'))
 DEPLETED_CREDITS_MESSAGE = """*Your free credits have been depleted for today*, but don't worry... 
 
-With just Ksh. {upgrade_amount}, you can use the bot *For A Whole Month*, and do your research and assignments
+With just {symbol}. {upgrade_amount}, you can use the bot *For A Whole Month*, and do your research and assignments
 
 *REPLY WITH THIS MESSAGE TO PAY👇*:  
 
 /pay 
 
 
-or */pay 07xxxxxxxxxx* to pay using a different number. Remember to enter the phone number 
+or */pay +2547xxxxxxxx* to pay using a different number. Remember to enter the phone number 
 
 Upgrade now to support our work, and keep using the bot uninterrupted
 
@@ -85,6 +83,7 @@ Upgrade now to support our work, and keep using the bot uninterrupted
 
 Thanks for using Sonia AI
 """
+
 STK_PUSH_SENT_MESSAGE = """
 We have sent an stk push to the number: {phone_number} Kindly enter your mpesa pin to complete the transaction
 
@@ -116,24 +115,26 @@ SIMULATED = 'SIMULATED_MESSAGE_IDS'
 
 PREMIUM_USERS = 'PREMIUM_USERS'
 
-UPGRADE_AMOUNT = int(os.getenv('UPGRADE_AMOUNT', 50))
+KENYA_UPGRADE_AMOUNT = int(os.getenv('KENYA_UPGRADE_AMOUNT', 100))
+TANZANIA_UPGRADE_AMOUNT = int(os.getenv('TANZANIA_UPGRADE_AMOUNT', 250))
+MALAWI_UPGRADE_AMOUNT = int(os.getenv('MALAWI_UPGRADE_AMOUNT', 1000))
 FREE_RESPONSES = int(os.getenv('FREE_RESPONSES', 10))
 FREE_TRIAL = int(os.getenv('FREE_TRIAL_PERIOD', 7))
 
-TRIAL_PERIOD_OVER = f"""
+TRIAL_PERIOD_OVER = """
 *Your trial period on Sonia bot is over*. 
 
-Pay Ksh. {UPGRADE_AMOUNT} to continue using the bot for the next one month
+Pay {symbol}. {upgrade_amount} to continue using the bot for the next one month
 
 Send the word "/pay" to pay
 
 For any questions, reach out to support at 254790670635
 """
 
-RENEW_SUBSCRIPTION_MESSAGE = f"""
+RENEW_SUBSCRIPTION_MESSAGE = """
 *Your subscription to Sonia Bot has expired. Kindly renew by sending the message "/pay". 
 
-Pay Ksh. {UPGRADE_AMOUNT} to continue using the bot for the next one month
+Pay {symbol}. {upgrade_amount} to continue using the bot for the next one month
 
 Thanks for being a valued user of Sonia Bot
 For queries, please contact 254790670635
@@ -191,7 +192,8 @@ To unsubscribe from the program, send this message👇:
 .stop lesson
 """
 
-LESSON_UNSUBSCRIBED = """Greetings {name}, You have been unsubscribed from Pipeline Lesson Forum and will not be receiving the daily lesson summary 
+LESSON_UNSUBSCRIBED = """Greetings {name}, You have been unsubscribed from Pipeline Lesson Forum and will not be 
+receiving the daily lesson summary 
 
 It is sad to see you leave.
 
@@ -216,7 +218,16 @@ Thank you for using Sonia AI
 
 # openai.api_key = os.getenv("OPENAI_API_KEY")
 r_host = os.getenv('REDIS_HOST', 'localhost')
-r = Redis(host=r_host, db=os.getenv('REDIS_DB', 5), charset="utf-8", decode_responses=True)
+r = Redis(
+    host=r_host,
+    password=os.getenv('REDIS_PASSWORD', 'zamo1234'),
+    db=int(os.getenv('REDIS_DB', 5)),
+    charset="utf-8",
+)
 
 high = Queue('high', connection=r)
 default = Queue('default', connection=r)
+
+currency_obj = namedtuple('currency_obj', ('symbol', 'amount'))
+
+SECONDS_BEFORE_ADVERT = int(os.getenv('SECONDS_BEFORE_ADVERT', '100'))

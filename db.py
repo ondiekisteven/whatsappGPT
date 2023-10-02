@@ -23,7 +23,9 @@ messages = Table('messages', metadata,
                  Column('role', String(200)),
                  Column('content', Text),
                  Column('date_created', DateTime(timezone=True), server_default=func.now()),
-                 Column('client_id', String(20))
+                 Column('client_id', String(20)),
+                 Column('message_id', String(200), nullable=True, default=None),
+                 Column('success', Boolean, default=True)
                  )
 
 payments = Table('mpesa_payments', metadata,
@@ -55,11 +57,19 @@ stk_waiting = Table('stk_waiting', metadata,
                     Column('version', Integer, default=1)
                     )
 
-
 openai_keys = Table('openai_keys', metadata,
                     Column('id', Integer, primary_key=True, autoincrement=True),
                     Column('key', String(150), index=True),
                     Column('comment', String(200), nullable=True),
                     Column('enabled', Boolean, default=True),
                     Column('date_created', DateTime(timezone=True), server_default=func.now()),
+                    )
+
+bot_adverts = Table('bot_adverts', metadata,
+                    Column('id', Integer, primary_key=True, autoincrement=True),
+                    Column('name', String(255), nullable=False, index=True, unique=True),
+                    Column('text', Text),
+                    Column('active', Boolean, default=False),
+                    Column('date_created', DateTime(timezone=True), server_default=func.now()),
+                    Column('date_updated', DateTime(timezone=True), server_onupdate=func.now()),
                     )

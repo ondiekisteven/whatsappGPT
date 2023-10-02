@@ -6,6 +6,8 @@ import urllib.parse
 import requests
 from dotenv import load_dotenv
 
+from crud import save_messages
+
 logger = logging.getLogger('whatsapp')
 
 load_dotenv()
@@ -60,7 +62,7 @@ class V2Whatsapp:
         self.url = base_url
         self.key = key
 
-    def _send_request(self, method, path, json=None, data=None, headers=None, files=None, params=None):
+    def _send_request(self, method, path, json_=None, data=None, headers=None, files=None, params=None):
         # if method == 'POST':
         #     assert json is not None, 'You have not provided json body to be sent'
 
@@ -71,7 +73,7 @@ class V2Whatsapp:
 
         try:
             resp = requests.request(
-                method=method.upper(), url=url, json=json, data=data, headers=headers, files=files,
+                method=method.upper(), url=url, json=json_, data=data, headers=headers, files=files,
             )
             logger.info(f"REQUEST [{method} {url}] {resp.request.__dict__} ")
             logger.info(f"RESPONSE [{resp.status_code}] {resp.text}")
@@ -98,7 +100,7 @@ class V2Whatsapp:
         return resp
 
 
-def send_message_base(client_id, chat_id, message, version):
+def _send_message_base(client_id, chat_id, message, version):
     if version == 2:
         return send_msg_new(client_id, chat_id, message)
     headers = {
@@ -126,13 +128,32 @@ def send_message_base(client_id, chat_id, message, version):
     return None
 
 
+def send_message_base(client_id, chat_id, message, version, session_id, role):
+    send_resp: dict = _send_message_base(client_id, chat_id, message, version)
+
+    new_msgs = [
+        {'role': role,
+         'content': message,
+         'msisdn': chat_id,
+         'session_id': session_id,
+         'client_id': client_id,
+         'message_id': send_resp['data']['key']['id'] if 'data' in send_resp and 'key' in send_resp['data'] else "",
+         'success': not send_resp['error'] if 'error' in send_resp else False
+         }
+    ]
+    save_messages(new_msgs)
+    return send_resp
+
+
 def send_msg_new(client_id, chat_id, message):
     url = os.getenv('V2_BASE_URL', 'http://new_whatsapp:3333')
     whatsapp = V2Whatsapp(base_url=url, key=client_id)
 
     resp = whatsapp.send_text_message(chat_id.split("@")[0], message)
-    if resp.status_code == 200:
-        logger.info(f"200 -> {resp.text}")
-        return
-    logger.error(f'{resp.status_code} -> {resp.text}')
-    return None
+    logger.info(f'{resp.status_code} -> {resp.text}')
+    try:
+        json_resp = json.loads(resp.text)
+    except:
+        json_resp = resp.text
+
+    return json_resp

@@ -11,8 +11,8 @@ import crud
 from constants import r, NOT_PAID, DEPLETED, PAID, FREE_RESPONSES, BOT_NUMBERS, SIMULATED, EXPIRED, FREE_TRIAL, \
     EXPIRED_NOTIFIED, SUBSCRIPTION_EXPIRED_NOTIFIED, USERS, REFERRAL_CODES, REFERRAL_CODE_NOT_FOUND_MESSAGE, \
     USER_HAS_ANOTHER_INVITE_MESSAGE, USER_MORE_THAN_2_DAYS_MESSAGE, UPLINE_ADDED_MESSAGE, DOWNLINE_ADDED_MESSAGE, \
-    logger, LESSON_SUBSCRIBED, LESSON_UNSUBSCRIBED, LESSON_ACTION_ERROR
-from crud import save_messages
+    logger, LESSON_SUBSCRIBED, LESSON_UNSUBSCRIBED, LESSON_ACTION_ERROR, high, KENYA_UPGRADE_AMOUNT, \
+    TANZANIA_UPGRADE_AMOUNT, MALAWI_UPGRADE_AMOUNT, currency_obj
 from schema import UserBase
 from wp import send_message_base
 
@@ -23,12 +23,14 @@ def send_notification(client_id, msisdn, version, session_id=None, message=None)
         return
     if session_id is None:
         session_id = str(datetime.datetime.now().timestamp())
-    new_msgs = [
-        {'role': 'notification', 'content': message, 'msisdn': msisdn,
-         'session_id': f'NOTIF-{session_id}', 'client_id': client_id}
-    ]
-    send_message_base(client_id, msisdn, message, version=version)
-    save_messages(new_msgs)
+    high.enqueue(send_message_base, args=(
+        client_id,
+        msisdn,
+        message,
+        version,
+        session_id,
+        'notification'
+    ))
 
 
 def get_session_id(client_id, msisdn):
@@ -202,7 +204,7 @@ def parse_msisdn(msisdn: str, log=True):
 def new_random_code():
     length = random.randint(4, 5)
     letters = string.ascii_uppercase + string.digits
-    code = ''.join(random.choice(letters) for i in range(length))
+    code = ''.join(random.choice(letters) for _ in range(length))
     while r.sismember(REFERRAL_CODES, code):
         new_random_code()
     return f'REF-{code}'
@@ -305,7 +307,8 @@ def handle_getting_code(data: dict, version):
     
     Copy the code and send it to users to invite them 
     
-    *NOTE: ASK USERS TO SEND THE INVITE CODE AT LEAST TWICE. TELL USERS TO SEND THE MESSAGE TWICE TO THE BOT FOR THE CODE TO REFLECT CORRECTLY*
+    *NOTE: ASK USERS TO SEND THE INVITE CODE AT LEAST TWICE. 
+    TELL USERS TO SEND THE MESSAGE TWICE TO THE BOT FOR THE CODE TO REFLECT CORRECTLY*
     """, version=version)
     send_notification(data.get('client_id'), data.get('from'), message=code.referral_code, version=version)
 
@@ -347,3 +350,77 @@ def handle_lesson_subscription(msisdn, name, text, client_id, version):
 
         else:
             send_notification(client_id, msisdn, version, message=LESSON_ACTION_ERROR)
+
+
+class AdvertHandler:
+    def __init__(self, advert, session_id, version, client_id, msisdn):
+        self.advert = advert
+        self.session_id = session_id
+        self.version = version
+        self.client_id = client_id
+        self.msisdn = msisdn
+
+        self.redis_key = f'ADV-{self.advert.name.upper()}'
+
+    def notify(self):
+        if self._has_not_received_advert_today():
+            logger.info('Sending advert...')
+            self._send_advert()
+
+            logger.info('Adding to advertised')
+            added = self._add_to_advertised()
+            logger.info(f"Added -> {added}")
+
+    def _has_not_received_advert_today(self):
+        return not r.sismember(self.redis_key, self.msisdn)
+
+    def _add_to_advertised(self):
+        added = r.sadd(self.redis_key, self.msisdn)
+
+        expire_key_at_midnight(self.redis_key)
+
+        return added
+
+    def _send_advert(self):
+        session_id = str(datetime.datetime.now().timestamp())
+        high.enqueue(send_message_base, args=(
+            self.client_id,
+            self.msisdn,
+            self.advert.text,
+            self.version,
+            f'ADVERT-{session_id}',
+            'advert'
+        ))
+
+
+def send_advert(msisdn, client_id, session_id, version):
+    logger.info(f"{'-' * 50}")
+    logger.info(f"Handling Advert For ({msisdn}, {client_id}, {session_id}, {version})")
+    adverts = crud.get_active_adverts()
+
+    logger.info(f"Current active adverts: {adverts}")
+
+    advert = adverts.get(0)
+    if not advert:
+        logger.info("No current active advert found")
+    handler = AdvertHandler(advert=advert, session_id=session_id, version=version, client_id=client_id, msisdn=msisdn)
+
+    handler.notify()
+    logger.info(f"{'*' * 50}")
+
+
+def get_upgrade_amount(msisdn) -> currency_obj:
+    mapping = {
+        'KENYA': currency_obj(symbol='Kes', amount=KENYA_UPGRADE_AMOUNT),
+        'TANZANIA': currency_obj(symbol='Tsh', amount=TANZANIA_UPGRADE_AMOUNT),
+        'MALAWI': currency_obj(symbol='MWK', amount=MALAWI_UPGRADE_AMOUNT),
+    }
+
+    if msisdn.startswith('254'):
+        return mapping['KENYA']
+
+    if msisdn.startswith('255'):
+        return mapping['TANZANIA']
+
+    if msisdn.startswith('265'):
+        return mapping['MALAWI']

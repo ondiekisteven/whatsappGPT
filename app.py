@@ -272,15 +272,15 @@ def v2_messages_view():
             if body.upper() == 'STOP':
                 return {'message': 'stopped'}
         _body = body.lower().split(" ")[0]
-        if _body in ['/pay', 'pay', '.pay']:
-            q.enqueue(handle_pay_prompt, kwargs=kwargs)
+        # if _body in ['/pay', 'pay', '.pay']:
+        #     q.enqueue(handle_pay_prompt, kwargs=kwargs)
             # handle_pay_prompt(**kwargs)
 
-        elif _body in ['/code']:
+        if _body in ['/code']:
             q.enqueue(handle_getting_code, args=(data, 2))
         else:
             q.enqueue(handle_prompt, kwargs=kwargs, retry=Retry(max=4, interval=60))
         return {'message': 'success'}
     except Exception as x:
         logger.exception(x)
-        return {'error': str(x)}
+        return {'error': str(x), 'error_class': f'{x.__class__}'}
