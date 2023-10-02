@@ -147,7 +147,7 @@ def notify_subscription_expired_renew(msisdn, client_id, version):
     logger.info(f"user ({msisdn}) subscription has expired and has already been notified")
 
 
-def handle_prompt(msisdn, text, client_id, version):
+def handle_prompt(msisdn, text, client_id, version=2):
     rk = f'{client_id}:{msisdn}'
     if r.hexists(BOT_NUMBERS, msisdn):
         logger.error('-----------cannot process requests by bots----------')
