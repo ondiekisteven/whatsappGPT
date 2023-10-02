@@ -314,7 +314,7 @@ def handle_getting_code(data: dict, version):
 
 
 def request_subscription(payload):
-    res = requests.post(os.getenv('LESSON_SUBSCRIPTION_API'), json=payload)
+    res = requests.post(os.getenv('LESSON_SUBSCRIPTION_API'), json=payload, verify=False)
     logger.info(f"Subscribe Response -> {res.status_code} : {res.text}")
     if res.status_code in [200, 201]:
         return True
