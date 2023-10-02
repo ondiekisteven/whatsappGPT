@@ -220,7 +220,7 @@ Thank you for using Sonia AI
 r_host = os.getenv('REDIS_HOST', 'localhost')
 r = Redis(
     host=r_host,
-    password=os.getenv('REDIS_PASSWORD', 'zamo1234'),
+    password=os.getenv('REDIS_PASSWORD'),
     db=int(os.getenv('REDIS_DB', 5)),
     charset="utf-8",
 )
