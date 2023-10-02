@@ -400,9 +400,10 @@ def send_advert(msisdn, client_id, session_id, version):
 
     logger.info(f"Current active adverts: {adverts}")
 
-    advert = adverts.get(0)
-    if not advert:
+    if not adverts:
         logger.info("No current active advert found")
+        return
+    advert = adverts[0]
     handler = AdvertHandler(advert=advert, session_id=session_id, version=version, client_id=client_id, msisdn=msisdn)
 
     handler.notify()

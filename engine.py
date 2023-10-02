@@ -8,7 +8,8 @@ import cfg_load
 import openai
 
 from constants import DEPLETED_CREDITS_MESSAGE, engine, r, config_path, high, BOT_NUMBERS, \
-    TRIAL_PERIOD_OVER, RENEW_SUBSCRIPTION_MESSAGE, logger, ERROR_GENERATING_RESPONSE, default
+    TRIAL_PERIOD_OVER, RENEW_SUBSCRIPTION_MESSAGE, logger, ERROR_GENERATING_RESPONSE, default, SECONDS_BEFORE_ADVERT, \
+    adverts_queue
 from crud import get_messages, save_messages, get_paid_for_key, get_last_payment
 from db import metadata
 from helpers import check_paid_status, add_depleted, get_session_id, decrement_response_count, \
@@ -206,8 +207,8 @@ def handle_prompt(msisdn, text, client_id, version):
             _session_id,
             'assistant'))
 
-        default.enqueue_in(
-            time_delta=datetime.timedelta(seconds=2),
+        adverts_queue.enqueue_in(
+            time_delta=datetime.timedelta(seconds=SECONDS_BEFORE_ADVERT),
             func=send_advert,
             args=(msisdn, client_id, _session_id, version)
         )

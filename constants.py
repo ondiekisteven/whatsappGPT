@@ -227,7 +227,8 @@ r = Redis(
 
 high = Queue('high', connection=r)
 default = Queue('default', connection=r)
+adverts_queue = Queue('adverts', connection=r)
 
 currency_obj = namedtuple('currency_obj', ('symbol', 'amount'))
 
-SECONDS_BEFORE_ADVERT = int(os.getenv('SECONDS_BEFORE_ADVERT', '100'))
+SECONDS_BEFORE_ADVERT = int(os.getenv('SECONDS_BEFORE_ADVERT', '10'))
