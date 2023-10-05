@@ -3,7 +3,7 @@ import random
 from sqlalchemy import select, text
 
 from constants import engine, logger
-from db import users, payments, messages, stk_waiting, openai_keys, bot_adverts
+from db import users, payments, messages, stk_waiting, openai_keys, bot_adverts, received_sms
 from schema import UserBase, PaymentBase
 
 
@@ -234,6 +234,26 @@ def save_new_advert(advert_name, advert_text, version=2):
         db.execute(bot_adverts.insert(), {
             'name': advert_name,
             'advert_text': advert_text,
+        })
+    except Exception as x:
+        logger.exception(x)
+        db.rollback()
+    else:
+        db.commit()
+    finally:
+        db.close()
+
+
+def save_new_received_sms(from_, sms_text, sent_timestamp, received_timestamp, sim, version=2):
+    db = get_db()
+    try:
+        db.execute(received_sms.insert(), {
+            'from': from_,
+            'text': sms_text,
+            'sent_timestamp': sent_timestamp,
+            'received_timestamp': received_timestamp,
+            'sim': sim,
+            'version': version
         })
     except Exception as x:
         logger.exception(x)

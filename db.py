@@ -73,3 +73,15 @@ bot_adverts = Table('bot_adverts', metadata,
                     Column('date_created', DateTime(timezone=True), server_default=func.now()),
                     Column('date_updated', DateTime(timezone=True), server_onupdate=func.now()),
                     )
+
+
+received_sms = Table('received_sms', metadata,
+                     Column('id', Integer, primary_key=True, autoincrement=True),
+                     Column('from', String(255), nullable=False),
+                     Column('text', Text),
+                     Column('sent_timestamp', String(255), nullable=False),
+                     Column('received_timestamp', String(255), nullable=False),
+                     Column('sim', String(150), nullable=True),
+                     Column('version', Integer, default=2),
+                     Column('date_created', DateTime(timezone=True), server_default=func.now()),
+                     )

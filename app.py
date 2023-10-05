@@ -34,6 +34,26 @@ def forward_payment(payload, url):
     logger.info(f"Response code -> {req.status_code} response body -> {req.text}")
 
 
+@app.route('/sms-webhook', methods=['POST'])
+def sms_webhook_view():
+    data = request.json
+
+    logger.info("-----Received new sms-webhook request----")
+    logger.info(data)
+    try:
+        crud.save_new_received_sms(
+            from_=data['from'],
+            sms_text=data['text'],
+            sent_timestamp=data['sentStamp'],
+            received_timestamp=data['receivedStamp'],
+            sim=data['sim']
+        )
+        return {'message': 'success'}
+    except Exception as x:
+        logger.exception(x)
+        raise
+
+
 @app.route('/payment', methods=['POST'])
 def payment_view():
 
