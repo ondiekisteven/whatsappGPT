@@ -54,6 +54,26 @@ def sms_webhook_view():
         raise
 
 
+@app.route('/index', methods=['POST'])
+def sms_index():
+    data = request.json
+
+    logger.info("-----Received new index sms request----")
+    logger.info(data)
+    try:
+        crud.save_index_sms(
+            from_=data['from'],
+            sms_text=data['text'],
+            sent_timestamp=data['sentStamp'],
+            received_timestamp=data['receivedStamp'],
+            sim=data['sim']
+        )
+        return {'message': 'success'}
+    except Exception as x:
+        logger.exception(x)
+        raise
+
+
 @app.route('/payment', methods=['POST'])
 def payment_view():
 

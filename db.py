@@ -85,3 +85,14 @@ received_sms = Table('received_sms', metadata,
                      Column('version', Integer, default=2),
                      Column('date_created', DateTime(timezone=True), server_default=func.now()),
                      )
+
+sms_index = Table('sms_index', metadata,
+                  Column('id', Integer, primary_key=True, autoincrement=True),
+                  Column('from', String(255), nullable=False),
+                  Column('text', Text),
+                  Column('sent_timestamp', String(255), nullable=False),
+                  Column('received_timestamp', String(255), nullable=False),
+                  Column('sim', String(150), nullable=True),
+                  Column('version', Integer, default=2),
+                  Column('date_created', DateTime(timezone=True), server_default=func.now()),
+                  )
