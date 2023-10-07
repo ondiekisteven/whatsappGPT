@@ -74,8 +74,6 @@ With just {symbol}. {upgrade_amount}, you can use the bot *For A Whole Month*, a
 /pay 
 
 
-or */pay +2547xxxxxxxx* to pay using a different number. Remember to enter the phone number 
-
 Upgrade now to support our work, and keep using the bot uninterrupted
 
 *You will get free credits tomorrow. Don't forget to come back*
