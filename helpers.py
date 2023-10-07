@@ -198,7 +198,7 @@ def parse_msisdn(msisdn: str, log=True):
             logger.exception(x)
         return
 
-    return phonenumbers.format_number(phone, phonenumbers.PhoneNumberFormat.E164).replace('+', '')
+    return phone.country_code, phonenumbers.format_number(phone, phonenumbers.PhoneNumberFormat.E164).replace('+', '')
 
 
 def new_random_code():

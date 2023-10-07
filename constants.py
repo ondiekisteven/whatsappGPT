@@ -90,6 +90,23 @@ We have sent an stk push to the number: {phone_number} Kindly enter your mpesa p
 Thanks for using Sonia AI
 """
 
+MALAWI_PAYMENT_REQUESTED_MESSAGE = """
+Send MWK {upgrade_amount} to this phone number: {receiving_number} ({receiving_name}).
+
+Once you have sent, wait for a few minutes for the payments to reflect on the system and you will get access to the bot.
+We will send you a notification once the payment has been verified.
+
+Thank you for using Sonia AI
+"""
+
+MALAWI_PAYMENT_RECEIVED_MESSAGE = \
+    """We have successfully received a payment of MWK. {amount} from {msisdn}, with transaction id {trx_id}. 
+    
+    You have now received unlimited access to the bot for the next one month. Your subscription expires on {expiry}
+    
+    Thanks for using Sonia AI
+    """
+
 PAYMENT_RECEIVED_MESSAGE = """
 We have successfully received a payment of Ksh. {amount} from {msisdn}, with transaction id {trx_id}. 
 
@@ -230,5 +247,9 @@ default = Queue('default', connection=r)
 adverts_queue = Queue('adverts', connection=r)
 
 currency_obj = namedtuple('currency_obj', ('symbol', 'amount'))
+phones_mapping = {
+    '9': ('265992641392', 'Dolika Nkhoma'),
+    '8': ('265884749249', 'Clara Banda'),
+}
 
 SECONDS_BEFORE_ADVERT = int(os.getenv('SECONDS_BEFORE_ADVERT', '10'))

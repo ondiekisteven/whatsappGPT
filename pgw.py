@@ -1,9 +1,10 @@
 import os
+import re
 
 import requests
 
 import crud
-from constants import STK_PUSH_SENT_MESSAGE, high, logger
+from constants import STK_PUSH_SENT_MESSAGE, high, logger, MALAWI_PAYMENT_REQUESTED_MESSAGE, phones_mapping
 from helpers import get_session_id, parse_msisdn, get_upgrade_amount
 from wp import send_message_base
 
@@ -36,18 +37,7 @@ class TinyPesa:
         return False
 
 
-def handle_pay_prompt(msisdn, text, client_id, version):
-    if text.lower() in ['/pay', 'pay', '.pay']:
-        payment_no = msisdn
-    else:
-        items = [d for d in text.split(' ') if d]
-        payment_no = items[1]
-
-    payment_no = parse_msisdn(payment_no)
-    if not payment_no.startswith('254'):
-        logger.warning(f'Payment request from number not from Kenya: {payment_no}')
-        return
-
+def handle_payment_kenya(msisdn, payment_no, client_id, version=2):
     logger.info("Sending stk push")
     currency = get_upgrade_amount(msisdn)
 
@@ -66,3 +56,53 @@ def handle_pay_prompt(msisdn, text, client_id, version):
         resp_msg = 'Error sending stk push to your phone. Please try again after some time.'
         high.enqueue(send_message_base, args=(client_id, msisdn, resp_msg, version, get_session_id(
             client_id, msisdn), 'notification'))
+
+
+def handle_payment_malawi(msisdn, client_id, version=2):
+    currency = get_upgrade_amount(msisdn)
+
+    crud.save_malawi_waiting(msisdn, client_id, currency.amount, target=msisdn, version=version)
+
+    resp_msg = MALAWI_PAYMENT_REQUESTED_MESSAGE.format(
+        upgrade_amount=currency.amount,
+        receiving_number=phones_mapping.get(msisdn[3], '265884749249')[0],
+        receiving_name=phones_mapping.get(msisdn[3], 'Clara Banda')[1]
+    )
+    high.enqueue(send_message_base, args=(client_id, msisdn, resp_msg, version, get_session_id(
+        client_id, msisdn), 'notification'))
+
+
+def handle_pay_prompt(msisdn, text, client_id, version):
+    if text.lower() in ['/pay', 'pay', '.pay']:
+        payment_no = msisdn
+    else:
+        items = [d for d in text.split(' ') if d]
+        payment_no = items[1]
+
+    country_code, payment_no = parse_msisdn(payment_no)
+
+    if country_code == 254:
+        handle_payment_kenya(msisdn=msisdn, payment_no=payment_no, client_id=client_id, version=version)
+
+    elif country_code == 265:
+        handle_payment_malawi(msisdn=msisdn, client_id=client_id, version=version)
+
+
+def extract_details(message):
+    pattern = r"Trans\.ID:\s+(\S+)[\s\S]+from\s+(\d+),(\w+\s\w+)\.[\s\S]+(\d+\.\d+)"
+
+    matches = re.findall(pattern, message)
+
+    if matches:
+        trans_id, msisdn, name, amount = matches[0]
+
+        details = {
+            "transaction_id": trans_id,
+            "msisdn": F"265{msisdn}",
+            "name": name,
+            "amount": amount
+        }
+
+        return details
+    else:
+        return None

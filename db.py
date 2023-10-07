@@ -38,6 +38,16 @@ payments = Table('mpesa_payments', metadata,
                  Column('request_dump', Text)
                  )
 
+malawi_payments = Table('malawi_payments', metadata,
+                        Column('id', Integer, primary_key=True),
+                        Column('msisdn', String(20)),
+                        Column('amount', Integer),
+                        Column('trx_id', String(100), unique=True),
+                        Column('date_created', DateTime(timezone=True), server_default=func.now()),
+                        Column('channel', String(100)),
+                        Column('request_dump', Text)
+                        )
+
 users = Table('users', metadata,
               Column('id', Integer, primary_key=True),
               Column('msisdn', String(20), unique=True),
@@ -56,6 +66,16 @@ stk_waiting = Table('stk_waiting', metadata,
                     Column('fulfilled', Boolean, default=False),
                     Column('version', Integer, default=1)
                     )
+
+malawi_payments_waiting = Table('malawi_payments_waiting', metadata,
+                                Column('id', Integer, primary_key=True),
+                                Column('msisdn', String(20), index=True),
+                                Column('client_id', String(20)),
+                                Column('amount', Integer),
+                                Column('target', String(20)),
+                                Column('fulfilled', Boolean, default=False),
+                                Column('version', Integer, default=1)
+                                )
 
 openai_keys = Table('openai_keys', metadata,
                     Column('id', Integer, primary_key=True, autoincrement=True),

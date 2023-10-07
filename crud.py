@@ -3,7 +3,8 @@ import random
 from sqlalchemy import select, text
 
 from constants import engine, logger
-from db import users, payments, messages, stk_waiting, openai_keys, bot_adverts, received_sms, sms_index
+from db import users, payments, messages, stk_waiting, openai_keys, bot_adverts, received_sms, sms_index, \
+    malawi_payments_waiting, malawi_payments
 from schema import UserBase, PaymentBase
 
 
@@ -95,6 +96,20 @@ def save_payment(payment: PaymentBase):
         db.close()
 
 
+def save_malawi_payment(payment: PaymentBase):
+    db = get_db()
+    try:
+        db.execute(malawi_payments.insert(), payment.dict())
+    except Exception as x:
+        logger.exception(x)
+        db.rollback()
+        raise
+    else:
+        db.commit()
+    finally:
+        db.close()
+
+
 def get_last_payment(msisdn):
     db = get_db()
     stmt = select(payments).where(payments.c.msisdn == msisdn).order_by(payments.c.date_created.desc()).limit(1)
@@ -153,6 +168,46 @@ def save_stk_waiting(msisdn, client_id, amount, target, version=2):
         db.close()
 
 
+def save_malawi_waiting(msisdn, client_id, amount, target, version=2):
+    db = get_db()
+    try:
+        db.execute(malawi_payments_waiting.insert(), {
+            'msisdn': msisdn,
+            'client_id': client_id,
+            'amount': amount,
+            'target': target,
+            'version': version
+        })
+    except Exception as x:
+        logger.exception(x)
+        db.rollback()
+    else:
+        db.commit()
+    finally:
+        db.close()
+
+
+def get_malawi_waiting(msisdn, amount):
+    db = get_db()
+    stmt = select(stk_waiting) \
+        .where(malawi_payments_waiting.c.msisdn == msisdn) \
+        .where(stk_waiting.c.fulfilled == False) \
+        .order_by(stk_waiting.c.id)
+    result = db.execute(stmt)
+    if result.rowcount == 1:
+        stk = result.fetchone()
+    else:
+        results = result.fetchall()
+        stk = [item for item in results if item.amount == amount]
+        if stk:
+            return stk[-1]
+        else:
+            return None
+
+    db.close()
+    return stk
+
+
 def get_stk_waiting(msisdn, amount):
     db = get_db()
     stmt = select(stk_waiting).where(stk_waiting.c.msisdn == msisdn).where(stk_waiting.c.fulfilled == False) \
@@ -172,10 +227,10 @@ def get_stk_waiting(msisdn, amount):
     return stk
 
 
-def mark_stk_waiting_fulfilled(waiting_id):
+def mark_stk_waiting_fulfilled(waiting_id, table=stk_waiting):
     db = get_db()
     try:
-        db.execute(stk_waiting.update().where(stk_waiting.c.id == waiting_id).values(fulfilled=True))
+        db.execute(table.update().where(stk_waiting.c.id == waiting_id).values(fulfilled=True))
     except Exception as x:
         logger.exception(x)
         db.rollback()
