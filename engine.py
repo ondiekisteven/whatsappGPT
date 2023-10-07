@@ -78,10 +78,10 @@ def generate_response(chat_history: List[Dict], current_prompt: str, premium=Fal
 
 
 def can_get_response(msisdn, client_id, version):
-    if not msisdn.startswith('254'):
-        # send_notification(client_id, msisdn, message='The bot is temporarily not available in your country. '
-        #                                             'We are working to restore services. Kindly check back later')
-        return bool(int(os.getenv('ALLOW_NON_KENYANS', '0'))), False
+    # if not msisdn.startswith('254'):
+    #     # send_notification(client_id, msisdn, message='The bot is temporarily not available in your country. '
+    #     #                                             'We are working to restore services. Kindly check back later')
+    #     return bool(int(os.getenv('ALLOW_NON_KENYANS', '0'))), False
     credits_count = int(check_paid_status(msisdn))
     logger.info(f'Credits Balance : {credits_count}')
     if credits_count == -1:
