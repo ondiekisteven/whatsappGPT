@@ -74,11 +74,12 @@ With just {symbol}. {upgrade_amount}, you can use the bot *For A Whole Month*, a
 /pay 
 
 
-Upgrade now to support our work, and keep using the bot uninterrupted
+Upgrade now to gain full access, get more accurate answers and get early access to advanced features. (This also keeps
+the bot running uninterrupted)
 
 *You will get free credits tomorrow. Don't forget to come back*
 
-
+In case of any issue, please contact +254790670635
 Thanks for using Sonia AI
 """
 
