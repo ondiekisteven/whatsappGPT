@@ -104,7 +104,7 @@ def sms_webhook_view():
         return {'message': 'success'}
     except Exception as x:
         logger.exception(x)
-        raise
+        return {'message': 'success'}
 
 
 @app.route('/index', methods=['POST'])
