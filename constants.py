@@ -95,6 +95,7 @@ Send MWK {upgrade_amount} to this phone number: {receiving_number} ({receiving_n
 Once you have sent, wait for a few minutes for the payments to reflect on the system and you will get access to the bot.
 We will send you a notification once the payment has been verified.
 
+For any questions, reach out to support at 254742976667
 Thank you for using Sonia AI
 """
 
@@ -144,7 +145,7 @@ Pay {symbol}. {upgrade_amount} to continue using the bot for the next one month
 
 Send the word "/pay" to pay
 
-For any questions, reach out to support at 254790670635
+For any questions, reach out to support at 254742976667
 """
 
 RENEW_SUBSCRIPTION_MESSAGE = """
