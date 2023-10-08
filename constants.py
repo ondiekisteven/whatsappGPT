@@ -154,25 +154,25 @@ RENEW_SUBSCRIPTION_MESSAGE = """
 Pay {symbol}. {upgrade_amount} to continue using the bot for the next one month
 
 Thanks for being a valued user of Sonia Bot
-For queries, please contact 254790670635
+For queries, please contact 254742976667
 """
 
 REFERRAL_CODE_NOT_FOUND_MESSAGE = """*Invalid Referral Code*. The referral code you sent does not exist. 
 Check again and make sure you copy the right referral code. 
 
-For queries, please contact 254790670635
+For queries, please contact 254742976667
 """
 
 USER_HAS_ANOTHER_INVITE_MESSAGE = """*Error processing referral code*. You were already invited by another user. 
 You cannot use more than one invite code 
 
-For queries, please contact 254790670635
+For queries, please contact 254742976667
 """
 
 USER_MORE_THAN_2_DAYS_MESSAGE = """*Error processing referral code*. 
 You have used the bot for more than 2 days, you cannot add a referral code now.
 
-For queries, please contact 254790670635
+For queries, please contact 254742976667
 """
 
 UPLINE_ADDED_MESSAGE = """Welcome To Sonia AI. You have been invited by {referer_msisdn}. You will now been given {
@@ -215,7 +215,7 @@ receiving the daily lesson summary
 It is sad to see you leave.
 
 If there is anything we can do to make your experience better, we would appreciate your feedback. 
-You can send your feedback or suggestion to this number: +254790670635
+You can send your feedback or suggestion to this number: +254742976667
  
 To join the program again, send this message👇:
 
@@ -227,7 +227,7 @@ To join the program again, send this message👇:
 LESSON_ACTION_ERROR = """An error occurred when processing your request.
 Kindly try sending your message again after a few minutes. 
 
-If the error persists, report the issue to +254790670635
+If the error persists, report the issue to +254742976667
 
 Thank you for using Sonia AI
 """
