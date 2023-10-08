@@ -57,18 +57,6 @@ services:
     networks:
       - whatsapp-network
 
-  adverts:
-    build:
-        context: .
-        dockerfile: Workers.Dockerfile
-    command: rq worker adverts
-    env_file:
-      - ./.env
-    volumes:
-      - ./logs/:/app/logs/
-    networks:
-      - whatsapp-network
-
 networks:
   whatsapp-network:
     external: true
