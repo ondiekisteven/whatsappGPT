@@ -138,15 +138,12 @@ MALAWI_UPGRADE_AMOUNT = int(os.getenv('MALAWI_UPGRADE_AMOUNT', 1000))
 FREE_RESPONSES = int(os.getenv('FREE_RESPONSES', 10))
 FREE_TRIAL = int(os.getenv('FREE_TRIAL_PERIOD', 7))
 
-TRIAL_PERIOD_OVER = """
-*Your trial period on Sonia bot is over*. 
+TRIAL_PERIOD_OVER = """Your Sonia bot trial is over, but the fun is just beginning!
 
-Pay {symbol}. {upgrade_amount} to continue using the bot for the next one month
-To pay, reply with this message:
+Unlock a month of unlimited use for just {symbol} {upgrade_amount}.
 
-Pay
-
-For any questions, reach out to support at 254742976667
+To pay, simply reply with "/pay". 
+For any questions regarding payments, reach out to support at 254742976667
 """
 
 RENEW_SUBSCRIPTION_MESSAGE = """
@@ -155,25 +152,25 @@ RENEW_SUBSCRIPTION_MESSAGE = """
 Pay {symbol}. {upgrade_amount} to continue using the bot for the next one month
 
 Thanks for being a valued user of Sonia Bot
-For queries, please contact 254742976667
+For queries regarding subscriptions, please contact 254742976667
 """
 
 REFERRAL_CODE_NOT_FOUND_MESSAGE = """*Invalid Referral Code*. The referral code you sent does not exist. 
 Check again and make sure you copy the right referral code. 
 
-For queries, please contact 254742976667
+For queries regarding subscriptions, please contact 254742976667
 """
 
 USER_HAS_ANOTHER_INVITE_MESSAGE = """*Error processing referral code*. You were already invited by another user. 
 You cannot use more than one invite code 
 
-For queries, please contact 254742976667
+For queries regarding subscriptions, please contact 254742976667
 """
 
 USER_MORE_THAN_2_DAYS_MESSAGE = """*Error processing referral code*. 
 You have used the bot for more than 2 days, you cannot add a referral code now.
 
-For queries, please contact 254742976667
+For queries regarding subscriptions, please contact 254742976667
 """
 
 UPLINE_ADDED_MESSAGE = """Welcome To Sonia AI. You have been invited by {referer_msisdn}. You will now been given {
