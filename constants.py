@@ -65,22 +65,21 @@ logger = logging.getLogger('engine')
 
 engine = create_db(confg['database'])
 
-DEPLETED_CREDITS_MESSAGE = """*Your free credits have been depleted for today*, but don't worry... 
+DEPLETED_CREDITS_MESSAGE = """Your free credits for today have been depleted, but don't worry!
 
-With just {symbol}. {upgrade_amount}, you can use the bot *For A Whole Month*, and do your research and assignments
+For just {symbol}. {upgrade_amount}, you can upgrade to a monthly subscription and get unlimited access to Sonia AI. 
+You'll be able to do your research and assignments without any limits.
 
-*REPLY WITH THIS MESSAGE TO PAY👇*:  
+To upgrade, simply reply with "/pay".
 
-/pay 
+Upgrading will also give you more accurate answers and early access to advanced features. 
+Plus, it helps us keep the bot running uninterrupted.
 
+You'll get free credits tomorrow, so don't forget to come back!
 
-Upgrade now to gain full access, get more accurate answers and get early access to advanced features. (This also keeps
-the bot running uninterrupted)
+If you have any questions, please contact support at +254790670635.
 
-*You will get free credits tomorrow. Don't forget to come back*
-
-In case of any issue, please contact +254790670635
-Thanks for using Sonia AI
+Thanks for using Sonia AI!
 """
 
 STK_PUSH_SENT_MESSAGE = """
@@ -89,23 +88,22 @@ We have sent an stk push to the number: {phone_number} Kindly enter your mpesa p
 Thanks for using Sonia AI
 """
 
-MALAWI_PAYMENT_REQUESTED_MESSAGE = """
-Send MWK {upgrade_amount} to this phone number: {receiving_number} ({receiving_name}).
+MALAWI_PAYMENT_REQUESTED_MESSAGE = """To upgrade your Sonia AI account to a monthly subscription, please send MWK {upgrade_amount} to this phone number: {receiving_number} (receiving_name).
 
-Once you have sent, wait for a few minutes for the payments to reflect on the system and you will get access to the bot.
-We will send you a notification once the payment has been verified.
+Once you have sent the payment, please wait a few minutes for it to be processed. Once your payment has been verified, you will receive a notification and you will be able to access the bot.
 
-For any questions, reach out to support at 254742976667
-Thank you for using Sonia AI
+If you have any questions, please reach out to support at 254742976667.
+
+Thank you for using Sonia AI!
 """
 
 MALAWI_PAYMENT_RECEIVED_MESSAGE = \
-    """We have successfully received a payment of MWK. {amount} from {msisdn}, with transaction id {trx_id}. 
-    
-    You have now received unlimited access to the bot for the next one month. Your subscription expires on {expiry}
-    
-    Thanks for using Sonia AI
-    """
+    """Your payment of MWK {amount} has been successfully received. Your transaction ID is {trx_id}.
+
+You now have unlimited access to Sonia AI for the next one month. Your subscription expires on {expiry}.
+
+Thank you for using Sonia AI!
+"""
 
 PAYMENT_RECEIVED_MESSAGE = """
 We have successfully received a payment of Ksh. {amount} from {msisdn}, with transaction id {trx_id}. 
