@@ -365,7 +365,7 @@ def v2_messages_view():
             if body.upper() == 'STOP':
                 return {'message': 'stopped'}
         _body = body.lower().split(" ")[0]
-        if _body in ['/pay', 'pay', '.pay']:
+        if _body in ['/pay', 'pay', '.pay', '"pay"']:
             q.enqueue(handle_pay_prompt, kwargs=kwargs)
             #handle_pay_prompt(**kwargs)
             return {'message': 'success'}

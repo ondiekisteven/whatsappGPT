@@ -142,8 +142,9 @@ TRIAL_PERIOD_OVER = """
 *Your trial period on Sonia bot is over*. 
 
 Pay {symbol}. {upgrade_amount} to continue using the bot for the next one month
+To pay, reply with this message:
 
-Send the word "/pay" to pay
+Pay
 
 For any questions, reach out to support at 254742976667
 """
