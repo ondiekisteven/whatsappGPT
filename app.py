@@ -85,7 +85,7 @@ def sms_webhook_view():
         expiry = datetime.now() + timedelta(days=30)
         add_paid(target, expiry)
 
-        if not notify:
+        if not notify and bool(os.getenv('IGNORE_STRAY_MESSAGES', '1')):
             logger.info("No matching waiting was found. Not sending notification")
             return {'message': 'success'}
         logger.info(f"Sending notification to {target} using {client_id}")
