@@ -99,7 +99,7 @@ def extract_details(message):
         matches = re.findall(pattern, message)
 
         if matches:
-            trans_id, msisdn, name, amount = matches[0]
+            trans_id, amount, msisdn, name = matches[0]
 
             details = {
                 "transaction_id": trans_id,
