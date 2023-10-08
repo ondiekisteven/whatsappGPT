@@ -89,20 +89,25 @@ def handle_pay_prompt(msisdn, text, client_id, version):
 
 
 def extract_details(message):
-    pattern = r"Trans\.ID:\s+(\S+)[\s\S]+from\s+(\d+),(\w+\s\w+)\.[\s\S]+(\d+\.\d+)"
+    patterns = [
+        r"Trans\.ID:\s+(\S+)[\s\S]+from\s+(\d+),(\w+\s\w+)\.[\s\S]+(\d+\.\d+)",
+        r"Trans\.ID\s*:\s*(\S+)\..*?MK (\d+\.\d+) from (\d+),(\w+\s\w+)",
+        r"Trans Id: (\S+), Money transfer to (\d+), (\w+\s\w+) is successful, Trans Amt: MK(\d+\.\d+)"
+    ]
+    details = None
+    for pattern in patterns:
+        matches = re.findall(pattern, message)
 
-    matches = re.findall(pattern, message)
+        if matches:
+            trans_id, msisdn, name, amount = matches[0]
 
-    if matches:
-        trans_id, msisdn, name, amount = matches[0]
+            details = {
+                "transaction_id": trans_id,
+                "msisdn": F"265{msisdn}",
+                "name": name,
+                "amount": amount
+            }
 
-        details = {
-            "transaction_id": trans_id,
-            "msisdn": F"265{msisdn}",
-            "name": name,
-            "amount": amount
-        }
+            break
 
-        return details
-    else:
-        return None
+    return details
