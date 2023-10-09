@@ -291,10 +291,10 @@ def index():
 @app.route("/v2/messages", methods=["GET", "POST"])
 def v2_messages_view():
     msg_payload = request.json
-    logger.info("-----------------V2 MESSAGE---------------------------")
-    logger.info(msg_payload)
     if msg_payload.get('type') != 'message':
         return {'message': 'not a message'}
+    logger.info("-----------------V2 MESSAGE---------------------------")
+    logger.info(msg_payload)
 
     if msg_payload.get('body').get('key').get('fromMe'):
         logger.info("This is a self message. nothing to do")
