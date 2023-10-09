@@ -79,7 +79,7 @@ def sms_webhook_view():
             msisdn=payment_data['msisdn'],
             trx_id=payment_data['transaction_id'],
             request_dump=json.dumps(json.dumps(payment_data)),
-            channel='Malawi_AirtelMoney' if payment_data['msisdn'][3] == 9 else 'Malawi_TNM_or_Any'
+            channel=data['from']
         )
         crud.save_malawi_payment(payment)
         expiry = datetime.now() + timedelta(days=30)
