@@ -88,7 +88,7 @@ We have sent an stk push to the number: {phone_number} Kindly enter your mpesa p
 Thanks for using Sonia AI
 """
 
-MALAWI_PAYMENT_REQUESTED_MESSAGE = """To upgrade your Sonia AI account to a monthly subscription, please send MWK {upgrade_amount} to this phone number: {receiving_number} (receiving_name).
+MALAWI_PAYMENT_REQUESTED_MESSAGE = """To upgrade your Sonia AI account to a monthly subscription, please send MWK {upgrade_amount} to this phone number: {receiving_number} ({receiving_name}).
 
 Once you have sent the payment, please wait a few minutes for it to be processed. Once your payment has been verified, you will receive a notification and you will be able to access the bot.
 
