@@ -190,18 +190,9 @@ def get_malawi_waiting(msisdn, amount):
     stmt = select(stk_waiting) \
         .where(malawi_payments_waiting.c.msisdn == msisdn) \
         .where(stk_waiting.c.fulfilled == False) \
-        .order_by(stk_waiting.c.id)
+        .order_by(stk_waiting.c.id.desc())
     result = db.execute(stmt)
-    if result.rowcount == 1:
-        stk = result.fetchone()
-    else:
-        results = result.fetchall()
-        stk = [item for item in results if item.amount == amount]
-        if stk:
-            return stk[-1]
-        else:
-            return None
-
+    stk = result.first()
     db.close()
     return stk
 
@@ -299,6 +290,7 @@ def save_new_advert(advert_name, advert_text, version=2):
 
 def save_new_received_sms(from_, sms_text, sent_timestamp, received_timestamp, sim, version=2):
     db = get_db()
+    response = True
     try:
         db.execute(received_sms.insert(), {
             'from': from_,
@@ -308,13 +300,16 @@ def save_new_received_sms(from_, sms_text, sent_timestamp, received_timestamp, s
             'sim': sim,
             'version': version
         })
+
+        db.commit()
+
     except Exception as x:
         logger.exception(x)
         db.rollback()
-    else:
-        db.commit()
+        response = False
     finally:
         db.close()
+    return response
 
 
 def save_index_sms(from_, sms_text, sent_timestamp, received_timestamp, sim, version=2):

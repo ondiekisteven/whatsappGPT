@@ -126,13 +126,16 @@ def extract_details(message):
 def handle_malawi_sms(data):
     logger.info("-"*100)
     try:
-        crud.save_new_received_sms(
+        saved = crud.save_new_received_sms(
             from_=data['from'],
             sms_text=data['text'],
             sent_timestamp=data['sentStamp'],
             received_timestamp=data['receivedStamp'],
             sim=data['sim']
         )
+        if not saved:
+            logger.info("Not saved. Exiting")
+            return {'error': 'message not saved'}
 
         payment_data = extract_details(data['text'])
         logger.info(f"Payment Data: {payment_data}")
@@ -156,6 +159,11 @@ def handle_malawi_sms(data):
             target = payment_data['msisdn']
             version = 2
 
+        expiry = datetime.now() + timedelta(days=30)
+
+        added = add_paid(target, expiry)
+        logger.info(f"Adding to paid users: target -> {target}, expiry -> {expiry}, added -> {added}")
+
         payment = PaymentBase(
             amount=int(float(payment_data['amount'])),
             msisdn=payment_data['msisdn'],
@@ -164,24 +172,22 @@ def handle_malawi_sms(data):
             channel=data['from']
         )
         crud.save_malawi_payment(payment)
-        expiry = datetime.now() + timedelta(days=30)
 
-        added = add_paid(target, expiry)
-        logger.info(f"Adding to paid users: target -> {target}, expiry -> {expiry}, added -> {added}")
+        if os.getenv('NOTIFY_ON_PAID') is not None:
 
-        logger.info(f"Sending notification to {target} using {client_id}")
-        send_notification(
-            client_id,
-            payment.msisdn,
-            version,
-            get_session_id(client_id, payment.msisdn),
-            MALAWI_PAYMENT_RECEIVED_MESSAGE.format(
-                amount=payment.amount,
-                msisdn=payment.msisdn,
-                trx_id=payment.trx_id,
-                expiry=expiry.strftime("%d/%m/%Y, %H:%M")
+            logger.info(f"Sending notification to {target} using {client_id}")
+            send_notification(
+                client_id,
+                payment.msisdn,
+                version,
+                get_session_id(client_id, payment.msisdn),
+                MALAWI_PAYMENT_RECEIVED_MESSAGE.format(
+                    amount=payment.amount,
+                    msisdn=payment.msisdn,
+                    trx_id=payment.trx_id,
+                    expiry=expiry.strftime("%d/%m/%Y, %H:%M")
+                )
             )
-        )
 
         logger.info("-" * 100)
         return {'message': 'success'}
