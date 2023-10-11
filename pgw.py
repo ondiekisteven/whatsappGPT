@@ -1,11 +1,16 @@
+import json
 import os
 import re
+from datetime import datetime, timedelta
 
 import requests
 
 import crud
-from constants import STK_PUSH_SENT_MESSAGE, high, logger, MALAWI_PAYMENT_REQUESTED_MESSAGE, phones_mapping
-from helpers import get_session_id, parse_msisdn, get_upgrade_amount
+from constants import STK_PUSH_SENT_MESSAGE, high, logger, MALAWI_PAYMENT_REQUESTED_MESSAGE, phones_mapping, \
+    MALAWI_PAYMENT_RECEIVED_MESSAGE
+from db import malawi_payments_waiting
+from helpers import get_session_id, parse_msisdn, get_upgrade_amount, add_paid, send_notification
+from schema import PaymentBase
 from wp import send_message_base
 
 
@@ -116,3 +121,67 @@ def extract_details(message):
             break
 
     return details
+
+
+def handle_malawi_sms(data):
+    try:
+        crud.save_new_received_sms(
+            from_=data['from'],
+            sms_text=data['text'],
+            sent_timestamp=data['sentStamp'],
+            received_timestamp=data['receivedStamp'],
+            sim=data['sim']
+        )
+
+        payment_data = extract_details(data['text'])
+        logger.info(f"Payment Data: {payment_data}")
+
+        if payment_data is None:
+            return {'message': 'success'}
+
+        if not payment_data['transaction_id'] or not payment_data['amount']:
+            logger.info("No data was found for this transaction")
+            return {'message': 'success'}
+
+        waiting = crud.get_malawi_waiting(payment_data['msisdn'], payment_data['amount'])
+        if waiting:
+            crud.mark_stk_waiting_fulfilled(waiting.id, table=malawi_payments_waiting)
+            client_id = waiting.client_id
+            target = waiting.target
+            version = waiting.version
+        else:
+            logger.warning("Payment has no matching waiting record. Using Default Client ID")
+            client_id = os.getenv('DEFAULT_CLIENT_ID')
+            target = payment_data['msisdn']
+            version = 2
+
+        payment = PaymentBase(
+            amount=int(float(payment_data['amount'])),
+            msisdn=payment_data['msisdn'],
+            trx_id=payment_data['transaction_id'],
+            request_dump=json.dumps(json.dumps(payment_data)),
+            channel=data['from']
+        )
+        crud.save_malawi_payment(payment)
+        expiry = datetime.now() + timedelta(days=30)
+
+        added = add_paid(target, expiry)
+        logger.info(f"Adding to paid users: target -> {target}, expiry -> {expiry}, added -> {added}")
+
+        logger.info(f"Sending notification to {target} using {client_id}")
+        send_notification(
+            client_id,
+            payment.msisdn,
+            version,
+            get_session_id(client_id, payment.msisdn),
+            MALAWI_PAYMENT_RECEIVED_MESSAGE.format(
+                amount=payment.amount,
+                msisdn=payment.msisdn,
+                trx_id=payment.trx_id,
+                expiry=expiry.strftime("%d/%m/%Y, %H:%M")
+            )
+        )
+        return {'message': 'success'}
+    except Exception as x:
+        logger.exception(x)
+        return {'error': str(x)}

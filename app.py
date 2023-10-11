@@ -9,12 +9,11 @@ from flask import Flask, request, jsonify
 from rq import Queue, Retry
 
 import crud
-from constants import PAYMENT_RECEIVED_MESSAGE, BOT_NUMBERS, MALAWI_PAYMENT_RECEIVED_MESSAGE
-from db import malawi_payments_waiting
+from constants import PAYMENT_RECEIVED_MESSAGE, BOT_NUMBERS, paymentsq
 from engine import r, handle_prompt
 from helpers import send_notification, get_session_id, add_paid, parse_msisdn, add_simulated_msg_id, \
     handle_referral_msg, handle_getting_code, handle_lesson_subscription
-from pgw import handle_pay_prompt, extract_details
+from pgw import handle_pay_prompt, handle_malawi_sms
 from schema import PaymentBase
 
 logger = logging.getLogger(__name__)
@@ -41,70 +40,10 @@ def sms_webhook_view():
 
     logger.info("-----Received new sms-webhook request----")
     logger.info(data)
-    try:
-        crud.save_new_received_sms(
-            from_=data['from'],
-            sms_text=data['text'],
-            sent_timestamp=data['sentStamp'],
-            received_timestamp=data['receivedStamp'],
-            sim=data['sim']
-        )
+    paymentsq.enqueue(handle_malawi_sms, args=(data,))
 
-        payment_data = extract_details(data['text'])
-        logger.info(f"Payment Data: {payment_data}")
-
-        if payment_data is None:
-            return {'message': 'success'}
-
-        if not payment_data['transaction_id'] or not payment_data['amount']:
-            logger.info("No data was found for this transaction")
-            return {'message': 'success'}
-
-        waiting = crud.get_malawi_waiting(payment_data['msisdn'], payment_data['amount'])
-        if waiting:
-            crud.mark_stk_waiting_fulfilled(waiting.id, table=malawi_payments_waiting)
-            client_id = waiting.client_id
-            target = waiting.target
-            version = waiting.version
-            notify = True
-        else:
-            logger.warning("Payment has no matching waiting record. Using Default Client ID")
-            client_id = os.getenv('DEFAULT_CLIENT_ID')
-            target = payment_data['msisdn']
-            version = 2
-            notify = False
-
-        payment = PaymentBase(
-            amount=int(float(payment_data['amount'])),
-            msisdn=payment_data['msisdn'],
-            trx_id=payment_data['transaction_id'],
-            request_dump=json.dumps(json.dumps(payment_data)),
-            channel=data['from']
-        )
-        crud.save_malawi_payment(payment)
-        expiry = datetime.now() + timedelta(days=30)
-        add_paid(target, expiry)
-
-        # if not notify and bool(os.getenv('IGNORE_STRAY_MESSAGES', '1')):
-        #     logger.info("No matching waiting was found. Not sending notification")
-        #     return {'message': 'success'}
-        logger.info(f"Sending notification to {target} using {client_id}")
-        send_notification(
-            client_id,
-            payment.msisdn,
-            version,
-            get_session_id(client_id, payment.msisdn),
-            MALAWI_PAYMENT_RECEIVED_MESSAGE.format(
-                amount=payment.amount,
-                msisdn=payment.msisdn,
-                trx_id=payment.trx_id,
-                expiry=expiry.strftime("%d/%m/%Y, %H:%M")
-            )
-        )
-        return {'message': 'success'}
-    except Exception as x:
-        logger.exception(x)
-        return {'message': 'success'}
+    logger.info("done queueing")
+    return {"message": "success"}
 
 
 @app.route('/index', methods=['POST'])

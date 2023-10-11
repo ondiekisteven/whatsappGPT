@@ -80,7 +80,7 @@ def decrement_response_count(msisdn: str):
 
 
 def add_paid(msisdn, expiry: datetime):
-    r.hset(PAID, msisdn, str(expiry.timestamp()))
+    return r.hset(PAID, msisdn, str(expiry.timestamp()))
 
 
 def add_users(msisdn):

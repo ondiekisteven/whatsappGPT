@@ -236,9 +236,11 @@ r = Redis(
     charset="utf-8",
 )
 
+# ----------------------------------------- QUEUES -----------------------------------
 high = Queue('high', connection=r)
 default = Queue('default', connection=r)
 adverts_queue = Queue('adverts', connection=r)
+paymentsq = Queue('payments', connection=r)
 
 currency_obj = namedtuple('currency_obj', ('symbol', 'amount'))
 phones_mapping = {
