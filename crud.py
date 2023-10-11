@@ -187,10 +187,10 @@ def save_malawi_waiting(msisdn, client_id, amount, target, version=2):
 
 def get_malawi_waiting(msisdn, amount):
     db = get_db()
-    stmt = select(stk_waiting) \
+    stmt = select(malawi_payments_waiting) \
         .where(malawi_payments_waiting.c.msisdn == msisdn) \
-        .where(stk_waiting.c.fulfilled == False) \
-        .order_by(stk_waiting.c.id.desc())
+        .where(malawi_payments_waiting.c.fulfilled == False) \
+        .order_by(malawi_payments_waiting.c.id.desc())
     result = db.execute(stmt)
     stk = result.first()
     db.close()

@@ -101,7 +101,13 @@ def extract_details(message):
         r"Money Received from (?P<msisdn>[\d]+) (?P<name>[A-Za-z\s]+) .*Amount: (?P<amount>\d+,\d+\.\d+)MWK Ref: (?P<transaction_id>\w+).*",
         r"Trans\.ID: (?P<transaction_id>[\w\.]+) .* received MK (?P<amount>[\d]+) plus MK (?P<withdrawal>\d+) .* from 0(?P<msisdn>\d+),(?P<name>[A-Za-z ']+)\. .*"
     ]
-    details = None
+    details = {
+        "transaction_id": None,
+        "msisdn": None,
+        "name": None,
+        "amount": None
+
+    }
     for pattern in patterns:
         match = re.search(pattern, message)
 
@@ -120,34 +126,33 @@ def extract_details(message):
 
             break
 
-    return details
+    return details['transaction_id'], details['msisdn'], details['name'], details['amount']
 
 
-def handle_malawi_sms(data):
+def handle_malawi_sms(from_, text, sent, received, sim):
     logger.info("-"*100)
     try:
         saved = crud.save_new_received_sms(
-            from_=data['from'],
-            sms_text=data['text'],
-            sent_timestamp=data['sentStamp'],
-            received_timestamp=data['receivedStamp'],
-            sim=data['sim']
+            from_=from_,
+            sms_text=text,
+            sent_timestamp=sent,
+            received_timestamp=received,
+            sim=sim
         )
         if not saved:
             logger.info("Not saved. Exiting")
             return {'error': 'message not saved'}
 
-        payment_data = extract_details(data['text'])
-        logger.info(f"Payment Data: {payment_data}")
+        transaction_id, msisdn, name, amount = extract_details(text)
+        logger.info(f"transaction_id: {transaction_id}")
+        logger.info(f"msisdn: {msisdn}")
+        logger.info(f"name: {name}")
+        logger.info(f"amount: {amount}")
 
-        if payment_data is None:
+        if transaction_id is None or amount is None:
             return {'message': 'success'}
 
-        if not payment_data['transaction_id'] or not payment_data['amount']:
-            logger.info("No data was found for this transaction")
-            return {'message': 'success'}
-
-        waiting = crud.get_malawi_waiting(payment_data['msisdn'], payment_data['amount'])
+        waiting = crud.get_malawi_waiting(msisdn, amount)
         if waiting:
             crud.mark_stk_waiting_fulfilled(waiting.id, table=malawi_payments_waiting)
             client_id = waiting.client_id
@@ -156,7 +161,7 @@ def handle_malawi_sms(data):
         else:
             logger.warning("Payment has no matching waiting record. Using Default Client ID")
             client_id = os.getenv('DEFAULT_CLIENT_ID')
-            target = payment_data['msisdn']
+            target = msisdn
             version = 2
 
         expiry = datetime.now() + timedelta(days=30)
@@ -165,11 +170,13 @@ def handle_malawi_sms(data):
         logger.info(f"Adding to paid users: target -> {target}, expiry -> {expiry}, added -> {added}")
 
         payment = PaymentBase(
-            amount=int(float(payment_data['amount'])),
-            msisdn=payment_data['msisdn'],
-            trx_id=payment_data['transaction_id'],
-            request_dump=json.dumps(json.dumps(payment_data)),
-            channel=data['from']
+            amount=int(float(amount)),
+            msisdn=msisdn,
+            trx_id=transaction_id,
+            request_dump=json.dumps(
+                {'transaction_id': transaction_id, 'msisdn': msisdn, 'name': name, 'amount': amount}
+            ),
+            channel=from_
         )
         crud.save_malawi_payment(payment)
 

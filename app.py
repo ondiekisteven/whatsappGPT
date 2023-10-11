@@ -40,7 +40,16 @@ def sms_webhook_view():
 
     logger.info("-----Received new sms-webhook request----")
     logger.info(data)
-    paymentsq.enqueue(handle_malawi_sms, args=(data,))
+    paymentsq.enqueue(
+        handle_malawi_sms,
+        kwargs={
+            'from_': data['from'],
+            'text': data['text'],
+            'sent': data['sentStamp'],
+            'received': data['receivedStamp'],
+            'sim': data['sim']
+        }
+    )
 
     logger.info("done queueing")
     return {"message": "success"}
