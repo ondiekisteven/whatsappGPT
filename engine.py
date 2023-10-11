@@ -183,18 +183,18 @@ def handle_prompt(msisdn, text, client_id, version=2):
             sn_id = str(datetime.datetime.now().timestamp())
             r.set(rk, sn_id)
     except Exception as e:
-        logger.error(e)
 
+        logger.error(e)
+        sn_id = str(datetime.datetime.now().timestamp())
+        r.set(rk, sn_id)
         overloaded = 'That model is currently overloaded with other requests'
         rate_limit = 'Rate limit reached'
         string_list = [overloaded, rate_limit]
 
         pattern = '|'.join(string_list)
         if re.search(pattern, str(e)):
-            send_notification(client_id, msisdn, message=ERROR_GENERATING_RESPONSE, version=version)
-            sn_id = str(datetime.datetime.now().timestamp())
-            r.set(rk, sn_id)
             raise
+        send_notification(client_id, msisdn, message=ERROR_GENERATING_RESPONSE, version=version)
 
     else:
         _session_id = get_session_id(client_id, msisdn)
