@@ -100,12 +100,10 @@ def save_malawi_payment(payment: PaymentBase):
     db = get_db()
     try:
         db.execute(malawi_payments.insert(), payment.dict())
+        db.commit()
     except Exception as x:
         logger.exception(x)
         db.rollback()
-        raise
-    else:
-        db.commit()
     finally:
         db.close()
 
