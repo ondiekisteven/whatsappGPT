@@ -124,6 +124,7 @@ def extract_details(message):
 
 
 def handle_malawi_sms(data):
+    logger.info("-"*100)
     try:
         crud.save_new_received_sms(
             from_=data['from'],
@@ -181,7 +182,11 @@ def handle_malawi_sms(data):
                 expiry=expiry.strftime("%d/%m/%Y, %H:%M")
             )
         )
+
+        logger.info("-" * 100)
         return {'message': 'success'}
     except Exception as x:
         logger.exception(x)
+
+        logger.info("-" * 100)
         return {'error': str(x)}
