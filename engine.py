@@ -6,10 +6,11 @@ from typing import List, Dict
 
 import cfg_load
 import openai
+import phonenumbers
 
 from constants import DEPLETED_CREDITS_MESSAGE, engine, r, config_path, high, BOT_NUMBERS, \
     TRIAL_PERIOD_OVER, RENEW_SUBSCRIPTION_MESSAGE, logger, ERROR_GENERATING_RESPONSE, default, SECONDS_BEFORE_ADVERT, \
-    adverts_queue
+    adverts_queue, BLOCKED_USERS, PAYING_COUNTRY_CODES
 from crud import get_messages, save_messages, get_paid_for_key, get_last_payment
 from db import metadata
 from helpers import check_paid_status, add_depleted, get_session_id, decrement_response_count, \
@@ -152,14 +153,18 @@ def handle_prompt(msisdn, text, client_id, version=2):
     if r.hexists(BOT_NUMBERS, msisdn):
         logger.error('-----------cannot process requests by bots----------')
         return
-    if msisdn in os.getenv('BLOCKED_USERS').split(","):
+    if msisdn in BLOCKED_USERS.split(","):
         return
 
-    if int(os.getenv('ENABLE_FREE_MODE', 1)):
+    if int(os.getenv('ENABLE_FREE_MODE', 0)):
         logger.info("FREE MODE ACTIVATED")
         has_credits, has_paid = True, True
     else:
         has_credits, has_paid = can_get_response(msisdn, client_id, version)
+
+    if str(phonenumbers.parse(f'+{msisdn}', None).country_code) not in PAYING_COUNTRY_CODES.split(","):
+        logger.info("User from non-paying country.")
+        has_credits, has_paid = True, True
 
     if not has_credits:
         # user has no credits.

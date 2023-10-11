@@ -93,18 +93,24 @@ def extract_details(message):
     message = message.replace("\n", "")
     patterns = [
         r"Trans\.ID : (?P<transaction_id>[\w\.]+)\. .*received MK (?P<amount>\d+\.\d+) from (?P<msisdn>\d+),(?P<name>[A-Za-z\s']+)\. .*",
-        r"Money Received from (?P<msisdn>[\d]+) (?P<name>[A-Za-z\s]+) .*Amount: (?P<amount>\d+,\d+\.\d+)MWK Ref: (?P<transaction_id>\w+).*"
+        r"Money Received from (?P<msisdn>[\d]+) (?P<name>[A-Za-z\s]+) .*Amount: (?P<amount>\d+,\d+\.\d+)MWK Ref: (?P<transaction_id>\w+).*",
+        r"Trans\.ID: (?P<transaction_id>[\w\.]+) .* received MK (?P<amount>[\d]+) plus MK (?P<withdrawal>\d+) .* from 0(?P<msisdn>\d+),(?P<name>[A-Za-z ']+)\. .*"
     ]
     details = None
     for pattern in patterns:
         match = re.search(pattern, message)
 
         if match:
+            amount = int(float(match.group('amount').replace(",", "")))
+            if 'withdrawal' in match.groupdict():
+                amount += int(float(match.groupdict().get('withdrawal').replace(",", "")))
+                logger.info("withdrawal charges found.")
+
             details = {
                 "transaction_id": match.group('transaction_id'),
                 "msisdn": match.group('msisdn') if match.group('msisdn').startswith('265') else F"265{match.group('msisdn')}",
                 "name": match.group('name'),
-                "amount": match.group('amount').replace(",", "")
+                "amount": amount
             }
 
             break

@@ -70,14 +70,14 @@ DEPLETED_CREDITS_MESSAGE = """Your free credits for today have been depleted, bu
 For just {symbol}. {upgrade_amount}, you can upgrade to a monthly subscription and get unlimited access to Sonia AI. 
 You'll be able to do your research and assignments without any limits.
 
-To upgrade, simply reply with "/pay".
+To upgrade, simply reply with the word pay.
 
 Upgrading will also give you more accurate answers and early access to advanced features. 
 Plus, it helps us keep the bot running uninterrupted.
 
 You'll get free credits tomorrow, so don't forget to come back!
 
-If you have any questions, please contact support at +254790670635.
+If you have any questions, please contact support at +254742976667.
 
 Thanks for using Sonia AI!
 """
@@ -140,17 +140,15 @@ TRIAL_PERIOD_OVER = """Your Sonia bot trial is over, but the fun is just beginni
 
 Unlock a month of unlimited use for just {symbol} {upgrade_amount}.
 
-To pay, simply reply with "/pay". 
-For any questions regarding payments, reach out to support at 254742976667
+To pay, simply reply with the word pay.
 """
 
 RENEW_SUBSCRIPTION_MESSAGE = """
-*Your subscription to Sonia Bot has expired. Kindly renew by sending the message "/pay". 
+*Your subscription to Sonia Bot has expired. Kindly renew by sending the word pay*. 
 
 Pay {symbol}. {upgrade_amount} to continue using the bot for the next one month
 
 Thanks for being a valued user of Sonia Bot
-For queries regarding subscriptions, please contact 254742976667
 """
 
 REFERRAL_CODE_NOT_FOUND_MESSAGE = """*Invalid Referral Code*. The referral code you sent does not exist. 
@@ -249,3 +247,6 @@ phones_mapping = {
 }
 
 SECONDS_BEFORE_ADVERT = int(os.getenv('SECONDS_BEFORE_ADVERT', '10'))
+
+BLOCKED_USERS = os.getenv('BLOCKED_USERS')
+PAYING_COUNTRY_CODES = os.getenv('PAYING_COUNTRY_CODES', '254,265,255')
