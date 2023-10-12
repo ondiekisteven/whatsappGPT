@@ -231,7 +231,7 @@ WELCOME_MESSAGE = """Hi there!
 Welcome to our platform. We're excited to have you onboard. 
 
 Just a quick heads up, to access our services, there is a small fee required. 
-Once you send the message "pay", to get information on how to pay. 
+Once you send the message "pay", you will get information on how to pay. 
 Once we receive your payment, you'll have unlimited access to our services for a whole month. 
 
 If you have any questions, feel free to here: +254742976667. Happy exploring!"""
