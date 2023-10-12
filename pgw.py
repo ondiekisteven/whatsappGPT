@@ -7,7 +7,7 @@ import requests
 
 import crud
 from constants import STK_PUSH_SENT_MESSAGE, high, logger, MALAWI_PAYMENT_REQUESTED_MESSAGE, phones_mapping, \
-    MALAWI_PAYMENT_RECEIVED_MESSAGE
+    MALAWI_PAYMENT_RECEIVED_MESSAGE, MALAWI_UPGRADE_AMOUNT
 from db import malawi_payments_waiting
 from helpers import get_session_id, parse_msisdn, get_upgrade_amount, add_paid, send_notification
 from schema import PaymentBase
@@ -183,6 +183,9 @@ def handle_malawi_sms(from_, text, sent, received, sim):
         if os.getenv('NOTIFY_ON_PAID') is not None:
 
             logger.info(f"Sending notification to {target} using {client_id}")
+            if payment.amount < MALAWI_UPGRADE_AMOUNT:
+                logger.info("Not sending notification .")
+                return {'message': 'success'}
             send_notification(
                 client_id,
                 payment.msisdn,
