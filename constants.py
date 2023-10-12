@@ -230,8 +230,10 @@ Thank you for using Sonia AI
 WELCOME_MESSAGE = """Hi there! 
 Welcome to our platform. We're excited to have you onboard. 
 
-Just a quick heads up, to access our services, there is a small fee required. 
-Once you send the message "pay", you will get information on how to pay. 
+Just a quick heads up, *to access our services, there is a small fee required*. 
+
+Send the word "pay", to get information on how to pay. 
+
 Once we receive your payment, you'll have unlimited access to our services for a whole month. 
 
 If you have any issues with payments, reach out to our support here: +254742976667. Happy exploring!"""
