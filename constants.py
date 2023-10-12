@@ -234,7 +234,7 @@ Just a quick heads up, to access our services, there is a small fee required.
 Once you send the message "pay", you will get information on how to pay. 
 Once we receive your payment, you'll have unlimited access to our services for a whole month. 
 
-If you have any questions, feel free to here: +254742976667. Happy exploring!"""
+If you have any issues with payments, reach out to our support here: +254742976667. Happy exploring!"""
 
 # openai.api_key = os.getenv("OPENAI_API_KEY")
 r_host = os.getenv('REDIS_HOST', 'localhost')
