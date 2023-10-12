@@ -10,12 +10,12 @@ import phonenumbers
 
 from constants import DEPLETED_CREDITS_MESSAGE, engine, r, config_path, high, BOT_NUMBERS, \
     TRIAL_PERIOD_OVER, RENEW_SUBSCRIPTION_MESSAGE, logger, ERROR_GENERATING_RESPONSE, default, SECONDS_BEFORE_ADVERT, \
-    adverts_queue, BLOCKED_USERS, PAYING_COUNTRY_CODES
+    adverts_queue, BLOCKED_USERS, PAYING_COUNTRY_CODES, WELCOME_MESSAGE, FREE_RESPONSES
 from crud import get_messages, save_messages, get_paid_for_key, get_last_payment
 from db import metadata
 from helpers import check_paid_status, add_depleted, get_session_id, decrement_response_count, \
     add_to_expired_and_notified, send_notification, add_to_subscription_expired_and_notified, send_advert, \
-    get_upgrade_amount
+    get_upgrade_amount, add_to_welcomed
 from wp import send_message_base
 
 metadata.create_all(engine)
@@ -88,7 +88,14 @@ def can_get_response(msisdn, client_id, version):
     if credits_count == -1:
         return True, True
     if credits_count > 0:
-        return True, False
+        # ---------------------plan chinobo---------------------
+        if credits_count == FREE_RESPONSES:
+            notify_welcome(msisdn, client_id, version)
+        else:
+            notify_depleted_free_responses(msisdn, client_id, version)
+        return False, False
+        # ---------------------end plan chinobo---------------------
+        # return False, False
     if credits_count == -2:
         notify_trial_period_over(msisdn, client_id, version)
     elif credits_count == -5:
@@ -131,6 +138,16 @@ def notify_trial_period_over(msisdn, client_id, version):
         send_notification(client_id=client_id, msisdn=msisdn, version=version, message=content)
         return
     logger.info(f"user ({msisdn}) trial period is over and has already been notified")
+
+
+def notify_welcome(msisdn, client_id, version):
+    if add_to_welcomed(msisdn):
+        # notify the user that their trial period is over
+        logger.info(f"user ({msisdn}) is new. Welcoming user using client id: {client_id}")
+        content = WELCOME_MESSAGE
+        send_notification(client_id=client_id, msisdn=msisdn, version=version, message=content)
+        return
+    logger.info(f"user ({msisdn}) is new and has already been welcomed")
 
 
 def notify_subscription_expired_renew(msisdn, client_id, version):

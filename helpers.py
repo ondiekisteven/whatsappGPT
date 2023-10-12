@@ -12,7 +12,7 @@ from constants import r, NOT_PAID, DEPLETED, PAID, FREE_RESPONSES, BOT_NUMBERS, 
     EXPIRED_NOTIFIED, SUBSCRIPTION_EXPIRED_NOTIFIED, USERS, REFERRAL_CODES, REFERRAL_CODE_NOT_FOUND_MESSAGE, \
     USER_HAS_ANOTHER_INVITE_MESSAGE, USER_MORE_THAN_2_DAYS_MESSAGE, UPLINE_ADDED_MESSAGE, DOWNLINE_ADDED_MESSAGE, \
     logger, LESSON_SUBSCRIBED, LESSON_UNSUBSCRIBED, LESSON_ACTION_ERROR, high, KENYA_UPGRADE_AMOUNT, \
-    TANZANIA_UPGRADE_AMOUNT, MALAWI_UPGRADE_AMOUNT, currency_obj
+    TANZANIA_UPGRADE_AMOUNT, MALAWI_UPGRADE_AMOUNT, currency_obj, WELCOMED
 from schema import UserBase
 from wp import send_message_base
 
@@ -128,6 +128,14 @@ def add_to_expired_and_notified(msisdn):
     added = r.sadd(EXPIRED_NOTIFIED, msisdn)
 
     expire_key_at_midnight(EXPIRED_NOTIFIED)
+
+    return added
+
+
+def add_to_welcomed(msisdn):
+    added = r.sadd(WELCOMED, msisdn)
+
+    expire_key_at_midnight(WELCOMED)
 
     return added
 

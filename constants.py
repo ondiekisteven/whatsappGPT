@@ -118,6 +118,7 @@ NOT_PAID = 'NOT_PAID'
 PAID = 'PAID'
 DEPLETED = 'DEPLETED_AND_NOTIFIED'
 EXPIRED_NOTIFIED = 'TRIAL_EXPIRED_AND_NOTIFIED'
+WELCOMED = 'WELCOMED_AND_NOTIFIED'
 SUBSCRIPTION_EXPIRED_NOTIFIED = 'SUBSCRIPTION_EXPIRED_AND_NOTIFIED'
 
 BOT_CLIENTS = 'BOT_CLIENTS'
@@ -226,6 +227,14 @@ If the error persists, report the issue to +254742976667
 Thank you for using Sonia AI
 """
 
+WELCOME_MESSAGE = """Hi there! 
+Welcome to our platform. We're excited to have you onboard. 
+
+Just a quick heads up, to access our services, there is a small fee required. 
+Once you send the message "pay", to get information on how to pay. 
+Once we receive your payment, you'll have unlimited access to our services for a whole month. 
+
+If you have any questions, feel free to here: +254742976667. Happy exploring!"""
 
 # openai.api_key = os.getenv("OPENAI_API_KEY")
 r_host = os.getenv('REDIS_HOST', 'localhost')
