@@ -67,6 +67,7 @@ def get_api_key(premium=False):
 
 def generate_response(chat_history: List[Dict], current_prompt: str, premium=False):
     api_key = get_api_key(premium)
+    chat_history = chat_history[-2:]
     chat_history.append({'role': 'user', 'content': current_prompt})
     logger.info(f"Generating response: api_key -> {api_key} history_length -> {len(chat_history)} ...")
     response = openai.ChatCompletion.create(
