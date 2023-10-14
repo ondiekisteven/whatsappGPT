@@ -16,11 +16,12 @@ def save_user(user: UserBase):
     db = get_db()
     try:
         db.execute(users.insert(), user.dict())
+        db.commit()
     except Exception as x:
         logger.exception(x)
         db.rollback()
     else:
-        db.commit()
+        pass
     finally:
         db.close()
 
@@ -86,12 +87,13 @@ def save_payment(payment: PaymentBase):
     db = get_db()
     try:
         db.execute(payments.insert(), payment.dict())
+        db.commit()
     except Exception as x:
         logger.exception(x)
         db.rollback()
         raise
     else:
-        db.commit()
+        pass
     finally:
         db.close()
 
@@ -137,12 +139,13 @@ def save_messages(msg_objs: list):
     db = get_db()
     try:
         db.execute(messages.insert(), msg_objs)
+        db.commit()
     except Exception as x:
         logger.exception(x)
         db.rollback()
 
     else:
-        db.commit()
+        pass
     finally:
         db.close()
 
@@ -157,11 +160,12 @@ def save_stk_waiting(msisdn, client_id, amount, target, version=2):
             'target': target,
             'version': version
         })
+        db.commit()
     except Exception as x:
         logger.exception(x)
         db.rollback()
     else:
-        db.commit()
+        pass
     finally:
         db.close()
 
@@ -176,11 +180,12 @@ def save_malawi_waiting(msisdn, client_id, amount, target, version=2):
             'target': target,
             'version': version
         })
+        db.commit()
     except Exception as x:
         logger.exception(x)
         db.rollback()
     else:
-        db.commit()
+        pass
     finally:
         db.close()
 
@@ -220,12 +225,13 @@ def mark_stk_waiting_fulfilled(waiting_id, table=stk_waiting):
     db = get_db()
     try:
         db.execute(table.update().where(stk_waiting.c.id == waiting_id).values(fulfilled=True))
+        db.commit()
     except Exception as x:
         logger.exception(x)
         db.rollback()
         raise
     else:
-        db.commit()
+        pass
     finally:
         db.close()
 
@@ -234,12 +240,13 @@ def add_upline(msisdn, upline_id):
     db = get_db()
     try:
         db.execute(users.update().where(users.c.msisdn == msisdn).values(invited_by_id=upline_id))
+        db.commit()
     except Exception as x:
         logger.exception(x)
         db.rollback()
         raise
     else:
-        db.commit()
+        pass
     finally:
         db.close()
 
@@ -279,11 +286,12 @@ def save_new_advert(advert_name, advert_text, version=2):
             'name': advert_name,
             'advert_text': advert_text,
         })
+        db.commit()
     except Exception as x:
         logger.exception(x)
         db.rollback()
     else:
-        db.commit()
+        pass
     finally:
         db.close()
 
@@ -323,11 +331,12 @@ def save_index_sms(from_, sms_text, sent_timestamp, received_timestamp, sim, ver
             'sim': sim,
             'version': version
         })
+        db.commit()
     except Exception as x:
         logger.exception(x)
         db.rollback()
     else:
-        db.commit()
+        pass
     finally:
         db.close()
 

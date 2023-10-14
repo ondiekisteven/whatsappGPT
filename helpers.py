@@ -228,15 +228,15 @@ def _get_name(sender: dict):
     return None
 
 
-def handle_save_user(data: dict):
-    msisdn = data.get('from').split('@')[0]
+def handle_save_user(msisdn, message_body, sender):
+    msisdn = msisdn.split('@')[0]
 
     if r.sismember(USERS, msisdn):
         return
-    logger.info(f'saving user: {data.get("sender")}')
+    logger.info(f'saving user: {sender}')
 
-    _gname = _get_name(data.get('sender'))
-    name = _gname if _gname is not None else data.get('notifyName') if 'notifyName' in data.keys() else None
+    _gname = _get_name(sender)
+    name = _gname if _gname is not None else ""
     referral_code = new_random_code()
     try:
 
@@ -249,12 +249,12 @@ def handle_save_user(data: dict):
         r.sadd(REFERRAL_CODES, referral_code)
 
     if crud.get_number_of_days_used_not_paid(msisdn) > 1:
-        if data.get('body').upper().startswith('REF'):
+        if message_body.upper().startswith('REF'):
             logger.warning('Can Not Add Referer for old user')
         return
 
-    if data.get('body').upper().startswith('REF'):
-        upline = crud.get_user_by_referral_code(data.get('body').split(' ')[0])
+    if message_body.upper().startswith('REF'):
+        upline = crud.get_user_by_referral_code(message_body.split(' ')[0])
         if upline:
             upline_id = upline.id
             crud.add_upline(msisdn, upline_id)
