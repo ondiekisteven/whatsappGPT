@@ -266,7 +266,7 @@ def v2_messages_view():
             }
         }
 
-        q.enqueue(handle_save_user, data)
+        q.enqueue(handle_save_user, data['from'], data['body'], data['sender'])
         kwargs = {'msisdn': data['from'], 'text': data.get('body'), 'client_id': data.get('client_id'), 'version': 2}
         body = data.get('body')
         client_id = data.get('client_id')
