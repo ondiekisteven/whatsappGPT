@@ -12,7 +12,7 @@ import crud
 from constants import PAYMENT_RECEIVED_MESSAGE, BOT_NUMBERS, paymentsq
 from engine import r, handle_prompt
 from helpers import send_notification, get_session_id, add_paid, parse_msisdn, add_simulated_msg_id, \
-    handle_referral_msg, handle_getting_code, handle_lesson_subscription
+    handle_referral_msg, handle_getting_code, handle_lesson_subscription, handle_save_user
 from pgw import handle_pay_prompt, handle_malawi_sms
 from schema import PaymentBase
 
@@ -266,6 +266,7 @@ def v2_messages_view():
             }
         }
 
+        q.enqueue(handle_save_user, data)
         kwargs = {'msisdn': data['from'], 'text': data.get('body'), 'client_id': data.get('client_id'), 'version': 2}
         body = data.get('body')
         client_id = data.get('client_id')
