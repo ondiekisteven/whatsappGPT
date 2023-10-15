@@ -170,8 +170,7 @@ You have used the bot for more than 2 days, you cannot add a referral code now.
 For queries regarding subscriptions, please contact 254742976667
 """
 
-UPLINE_ADDED_MESSAGE = """Welcome To Sonia AI. You have been invited by {referer_msisdn}. You will now been given {
-credits_count} free credits to use daily for {free_trial} days.
+UPLINE_ADDED_MESSAGE = """Welcome To Sonia AI. You have been invited by {referer_msisdn}. 
 
 To find out what I can do, type /help. 
 
@@ -261,5 +260,5 @@ phones_mapping = {
 
 SECONDS_BEFORE_ADVERT = int(os.getenv('SECONDS_BEFORE_ADVERT', '10'))
 
-BLOCKED_USERS = os.getenv('BLOCKED_USERS')
+BLOCKED_USERS = os.getenv('BLOCKED_USERS', '')
 PAYING_COUNTRY_CODES = os.getenv('PAYING_COUNTRY_CODES', '254,265,255')

@@ -248,16 +248,16 @@ def handle_save_user(msisdn, message_body, sender):
         add_users(msisdn)
         r.sadd(REFERRAL_CODES, referral_code)
 
-    if crud.get_number_of_days_used_not_paid(msisdn) > 1:
-        if message_body.upper().startswith('REF'):
-            logger.warning('Can Not Add Referer for old user')
-        return
-
-    if message_body.upper().startswith('REF'):
-        upline = crud.get_user_by_referral_code(message_body.split(' ')[0])
-        if upline:
-            upline_id = upline.id
-            crud.add_upline(msisdn, upline_id)
+    # if crud.get_number_of_days_used_not_paid(msisdn) > 1:
+    #     if message_body.upper().startswith('REF'):
+    #         logger.warning('Can Not Add Referer for old user')
+    #     return
+    #
+    # if message_body.upper().startswith('REF'):
+    #     upline = crud.get_user_by_referral_code(message_body.split(' ')[0])
+    #     if upline:
+    #         upline_id = upline.id
+    #         crud.add_upline(msisdn, upline_id)
 
 
 def handle_referral_msg(data: dict, version):
@@ -292,8 +292,8 @@ def handle_referral_msg(data: dict, version):
         return
 
     logger.info("Adding upline to use")
-    logger.info(f'referer: {referer.__dict__}')
-    logger.info(f'downline: {user.__dict__}')
+    logger.info(f'referer: {referer}')
+    logger.info(f'downline: {user}')
     crud.add_upline(msisdn, referer.id)
     send_notification(client_id, msisdn, message=UPLINE_ADDED_MESSAGE.format(
         referer_msisdn=referer.msisdn,
