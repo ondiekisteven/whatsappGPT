@@ -78,7 +78,7 @@ def handle_payment_malawi(msisdn, client_id, version=2):
 
 
 def handle_pay_prompt(msisdn, text, client_id, version):
-    if text.lower() in ['/pay', 'pay', '.pay']:
+    if text.lower() in ['/pay', 'pay', '.pay', '"pay"', '"/pay"', "'pay'", "'/pay'"]:
         payment_no = msisdn
     else:
         items = [d for d in text.split(' ') if d]
