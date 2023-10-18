@@ -88,11 +88,7 @@ We have sent an stk push to the number: {phone_number} Kindly enter your mpesa p
 Thanks for using Sonia AI
 """
 
-MALAWI_PAYMENT_REQUESTED_MESSAGE = """To upgrade your Sonia AI account to a monthly subscription, please send MWK {upgrade_amount} to this phone number: {receiving_number} ({receiving_name}).
-
-Once you have sent the payment, please wait a few minutes for it to be processed. Once your payment has been verified, you will receive a notification and you will be able to access the bot.
-
-If you have any questions, please reach out to support at 254742976667.
+MALAWI_PAYMENT_REQUESTED_MESSAGE = """To pay, please send MWK {upgrade_amount} to this phone number: +{receiving_number} ({receiving_name}).
 
 Thank you for using Sonia AI!
 """
@@ -139,9 +135,9 @@ FREE_TRIAL = int(os.getenv('FREE_TRIAL_PERIOD', 7))
 
 TRIAL_PERIOD_OVER = """Your Sonia bot trial is over, but the fun is just beginning!
 
-Unlock a month of unlimited use for just {symbol} {upgrade_amount}.
+*You can get unlimited use for a whole month by paying {symbol} {upgrade_amount}*.
 
-To pay, simply reply with the word pay.
+To get instructions on how to pay, simply reply with the word pay.
 """
 
 RENEW_SUBSCRIPTION_MESSAGE = """
