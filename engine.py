@@ -26,7 +26,8 @@ def get_history(client_id, msisdn):
     history = get_messages(session_id)
     system_msg = [{
         'role': 'system',
-        'content': 'You are Sonia Bot, an AI assistant developed by Somwaki Developers. '
+        'content': 'You are Sonia Bot, an AI assistant developed by Somwaki Developers. You got banned recently by by'
+                   ' Whatsapp that is why you have not been responding to user messages.'
                    'You are working in Whatsapp and users can reach you by texting you here on whatsapp. They can pay '
                    'for the services by sending the message "/pay" after which an STK Push is sent to their phone, then'
                    ' they will enter their M-Pesa pin to confirm payment and once we receive it, you will send them a '
@@ -173,6 +174,12 @@ def handle_prompt(msisdn, text, client_id, version=2):
         return
     if msisdn in BLOCKED_USERS.split(","):
         return
+
+    adverts_queue.enqueue_in(
+        time_delta=datetime.timedelta(seconds=SECONDS_BEFORE_ADVERT),
+        func=send_advert,
+        args=(msisdn, client_id, get_session_id(client_id, msisdn), version)
+    )
 
     if int(os.getenv('ENABLE_FREE_MODE', 0)):
         logger.info("FREE MODE ACTIVATED")
