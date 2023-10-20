@@ -158,11 +158,13 @@ def handle_malawi_sms(from_, text, sent, received, sim):
             client_id = waiting.client_id
             target = waiting.target
             version = waiting.version
+            notify = True
         else:
             logger.warning("Payment has no matching waiting record. Using Default Client ID")
             client_id = os.getenv('DEFAULT_CLIENT_ID')
             target = msisdn
             version = 2
+            notify = False
 
         expiry = datetime.now() + timedelta(days=30)
 
@@ -180,12 +182,11 @@ def handle_malawi_sms(from_, text, sent, received, sim):
         )
         crud.save_malawi_payment(payment)
 
-        if os.getenv('NOTIFY_ON_PAID') is not None:
-
-            logger.info(f"Sending notification to {target} using {client_id}")
-            if payment.amount < MALAWI_UPGRADE_AMOUNT:
-                logger.info("Not sending notification .")
-                return {'message': 'success'}
+        logger.info(f"Sending notification to {target} using {client_id}")
+        if payment.amount != MALAWI_UPGRADE_AMOUNT:
+            logger.info("Not sending notification .")
+            return {'message': 'success'}
+        if notify:
             send_notification(
                 client_id,
                 payment.msisdn,
