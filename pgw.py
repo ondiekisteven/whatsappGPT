@@ -8,7 +8,7 @@ import requests
 import crud
 from constants import STK_PUSH_SENT_MESSAGE, high, logger, MALAWI_PAYMENT_REQUESTED_MESSAGE, phones_mapping, \
     MALAWI_PAYMENT_RECEIVED_MESSAGE, MALAWI_UPGRADE_AMOUNT
-from db import malawi_payments_waiting
+from db import MalawiPaymentsWaiting
 from helpers import get_session_id, parse_msisdn, get_upgrade_amount, add_paid, send_notification
 from schema import PaymentBase
 from wp import send_message_base
@@ -154,7 +154,7 @@ def handle_malawi_sms(from_, text, sent, received, sim):
 
         waiting = crud.get_malawi_waiting(msisdn, amount)
         if waiting:
-            crud.mark_stk_waiting_fulfilled(waiting.id, table=malawi_payments_waiting)
+            crud.mark_stk_waiting_fulfilled(waiting.id, table=MalawiPaymentsWaiting)
             client_id = waiting.client_id
             target = waiting.target
             version = waiting.version

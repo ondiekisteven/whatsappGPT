@@ -1,15 +1,19 @@
 import json
 import logging
 import os
+from collections import OrderedDict
 from datetime import timedelta, datetime
 
 import openai
 import requests
 from flask import Flask, request, jsonify
+from flask_cors import CORS
+from flask_restless import APIManager
 from rq import Queue, Retry
 
 import crud
-from constants import PAYMENT_RECEIVED_MESSAGE, BOT_NUMBERS, paymentsq
+from constants import PAYMENT_RECEIVED_MESSAGE, BOT_NUMBERS, paymentsq, confg, PAID
+from db import db, StkWaiting, MpesaPayment, MalawiPayment, ReceivedSMS, User, Message
 from engine import r, handle_prompt
 from helpers import send_notification, get_session_id, add_paid, parse_msisdn, add_simulated_msg_id, \
     handle_referral_msg, handle_getting_code, handle_lesson_subscription, handle_save_user
@@ -19,6 +23,17 @@ from schema import PaymentBase
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
+
+cfg = confg['database']
+app.config[
+    'SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{cfg["username"]}:{cfg["password"]}@{cfg["host"]}:{cfg["port"]}/{cfg["database"]}'
+# app.config['SQLALCHEMY_ECHO'] = True
+
+db.init_app(app)
+
+manager = APIManager(app, session=db.session)
+CORS(app, resources={r"/api/*": {"origins": "*"}})
+
 openai.api_key = os.getenv("OPENAI_API_KEY")
 q = Queue('default', connection=r)
 
@@ -130,7 +145,7 @@ def payment_view():
             crud.save_payment(payment)
             waiting = crud.get_stk_waiting(payment.msisdn, payment.amount)
             if waiting:
-                crud.mark_stk_waiting_fulfilled(waiting.id)
+                crud.mark_stk_waiting_fulfilled(waiting.id, table=StkWaiting)
                 client_id = waiting.client_id
                 target = waiting.target
                 version = waiting.version
@@ -313,7 +328,7 @@ def v2_messages_view():
             r.set(f'{client_id}:{msisdn}', sn_id)
             if body.upper() == 'STOP':
                 return {'message': 'stopped'}
-        _body = body.lower().split(" ")[0]
+        _body = body.lower().replace('"', '').replace("'", "").split(" ")[0]
         if _body in ['/pay', 'pay', '.pay', '"pay"', '"/pay"', "'pay'", "'/pay'"]:
             q.enqueue(handle_pay_prompt, kwargs=kwargs)
             #handle_pay_prompt(**kwargs)
@@ -327,3 +342,38 @@ def v2_messages_view():
     except Exception as x:
         logger.exception(x)
         return {'error': str(x), 'error_class': f'{x.__class__}'}
+
+
+def paginate(data, page_num, page_size):
+    total_pages = len(data) // page_size + (1 if len(data) % page_size > 0 else 0)
+
+    if page_num < 1 or page_num > total_pages:
+        return []
+
+    start_index = (page_num - 1) * page_size
+    end_index = start_index + page_size
+
+    return data[start_index:end_index]
+
+
+@app.route('/api/paid-users', methods=['GET'])
+def fetch_paid_users():
+    paid = r.hgetall(PAID)
+    ordered_paid = OrderedDict(sorted(paid.items(), key=lambda x: float(x[1]), reverse=True))
+    result = [{
+        'msisdn': item[0],
+        'expiry': datetime.fromtimestamp(float(item[1]))} for item in list(ordered_paid.items())]
+    page = request.args.get('page', '1')
+    page = int(page) if page.isnumeric() else 1
+    data = paginate(result, page, 25)
+
+    return data
+
+
+# RESTLESS API ENDPOINTS
+with app.app_context():
+    manager.create_api(MpesaPayment, methods=['GET'], page_size=50)
+    manager.create_api(MalawiPayment, methods=['GET'], page_size=50)
+    manager.create_api(ReceivedSMS, methods=['GET'], page_size=50)
+    manager.create_api(User, methods=['GET', 'POST'], page_size=50)
+    manager.create_api(Message, methods=['GET'], page_size=50)

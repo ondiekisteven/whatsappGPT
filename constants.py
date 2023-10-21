@@ -8,7 +8,7 @@ from rq import Queue
 
 from db import create_db
 
-config_path = os.getenv('CONFIG_FILE', 'config.yaml')
+config_path = os.getenv('CONFIG_FILE', os.path.join(os.path.dirname(__file__), 'config.yaml'))
 try:
     confg = cfg_load.load(config_path)
 except FileNotFoundError:
@@ -240,6 +240,7 @@ r = Redis(
     password=os.getenv('REDIS_PASSWORD'),
     db=int(os.getenv('REDIS_DB', 5)),
     charset="utf-8",
+    decode_responses=True
 )
 
 # ----------------------------------------- QUEUES -----------------------------------

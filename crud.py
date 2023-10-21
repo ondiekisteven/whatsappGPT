@@ -3,8 +3,8 @@ import random
 from sqlalchemy import select, text
 
 from constants import engine, logger
-from db import users, payments, messages, stk_waiting, openai_keys, bot_adverts, received_sms, sms_index, \
-    malawi_payments_waiting, malawi_payments
+from db import User, MpesaPayment, MalawiPayment, MalawiPaymentsWaiting, Message, OpenAIKey, StkWaiting, BotAdvert, \
+    ReceivedSMS, SMSIndex
 from schema import UserBase, PaymentBase
 
 
@@ -15,7 +15,7 @@ def get_db():
 def save_user(user: UserBase):
     db = get_db()
     try:
-        db.execute(users.insert(), user.dict())
+        db.execute(User.__table__.insert(), user.dict())
         db.commit()
     except Exception as x:
         logger.exception(x)
@@ -29,7 +29,7 @@ def save_user(user: UserBase):
 def get_user_by_referral_code(code: str):
     db = get_db()
     try:
-        stmt = select(users).where(users.c.referral_code == code)
+        stmt = select(User).where(User.referral_code == code)
         result = db.execute(stmt).fetchone()
         db.close()
     except Exception as e:
@@ -43,7 +43,7 @@ def get_user_by_referral_code(code: str):
 def get_user_by_msisdn(msisdn: str):
     db = get_db()
     try:
-        stmt = select(users).where(users.c.msisdn == msisdn)
+        stmt = select(User).where(User.msisdn == msisdn)
         result = db.execute(stmt).fetchone()
         db.close()
     except Exception as e:
@@ -72,7 +72,7 @@ def get_downlines_count(user_id: int):
 def get_user_by_id(user_id: int):
     db = get_db()
     try:
-        stmt = select(users).where(users.c.id == user_id)
+        stmt = select(User).where(User.id == user_id)
         result = db.execute(stmt).fetchone()
         db.close()
     except Exception as e:
@@ -86,7 +86,7 @@ def get_user_by_id(user_id: int):
 def save_payment(payment: PaymentBase):
     db = get_db()
     try:
-        db.execute(payments.insert(), payment.dict())
+        db.execute(MpesaPayment.__table__.insert(), payment.dict())
         db.commit()
     except Exception as x:
         logger.exception(x)
@@ -101,7 +101,7 @@ def save_payment(payment: PaymentBase):
 def save_malawi_payment(payment: PaymentBase):
     db = get_db()
     try:
-        db.execute(malawi_payments.insert(), payment.dict())
+        db.execute(MalawiPayment.__table__.insert(), payment.dict())
         db.commit()
     except Exception as x:
         logger.exception(x)
@@ -112,7 +112,7 @@ def save_malawi_payment(payment: PaymentBase):
 
 def get_last_payment(msisdn):
     db = get_db()
-    stmt = select(payments).where(payments.c.msisdn == msisdn).order_by(payments.c.date_created.desc()).limit(1)
+    stmt = select(MpesaPayment).where(MpesaPayment.msisdn == msisdn).order_by(MpesaPayment.date_created.desc()).limit(1)
     result = db.execute(stmt).fetchone()
     db.close()
     return result
@@ -120,7 +120,7 @@ def get_last_payment(msisdn):
 
 def get_messages(session_id):
     db = get_db()
-    stmt = select(messages).where(messages.c.session_id == session_id)
+    stmt = select(Message).where(Message.session_id == session_id)
     result = db.execute(stmt).fetchall()
     db.close()
     return result
@@ -128,7 +128,7 @@ def get_messages(session_id):
 
 def get_payments():
     db = get_db()
-    stmt = select(payments).order_by('date_created')
+    stmt = select(MpesaPayment).order_by('date_created')
     result = db.execute(stmt).fetchall()
     db.close()
     return result
@@ -138,7 +138,7 @@ def save_messages(msg_objs: list):
     logger.info(f"saving : {msg_objs}")
     db = get_db()
     try:
-        db.execute(messages.insert(), msg_objs)
+        db.execute(Message.__table__.insert(), msg_objs)
         db.commit()
     except Exception as x:
         logger.exception(x)
@@ -153,7 +153,7 @@ def save_messages(msg_objs: list):
 def save_stk_waiting(msisdn, client_id, amount, target, version=2):
     db = get_db()
     try:
-        db.execute(stk_waiting.insert(), {
+        db.execute(StkWaiting.__table__.insert(), {
             'msisdn': msisdn,
             'client_id': client_id,
             'amount': amount,
@@ -173,7 +173,7 @@ def save_stk_waiting(msisdn, client_id, amount, target, version=2):
 def save_malawi_waiting(msisdn, client_id, amount, target, version=2):
     db = get_db()
     try:
-        db.execute(malawi_payments_waiting.insert(), {
+        db.execute(MalawiPaymentsWaiting.__table__.insert(), {
             'msisdn': msisdn,
             'client_id': client_id,
             'amount': amount,
@@ -192,10 +192,10 @@ def save_malawi_waiting(msisdn, client_id, amount, target, version=2):
 
 def get_malawi_waiting(msisdn, amount):
     db = get_db()
-    stmt = select(malawi_payments_waiting) \
-        .where(malawi_payments_waiting.c.msisdn == msisdn) \
-        .where(malawi_payments_waiting.c.fulfilled == False) \
-        .order_by(malawi_payments_waiting.c.id.desc())
+    stmt = select(MalawiPaymentsWaiting) \
+        .where(MalawiPaymentsWaiting.msisdn == msisdn) \
+        .where(MalawiPaymentsWaiting.fulfilled == False) \
+        .order_by(MalawiPaymentsWaiting.id.desc())
     result = db.execute(stmt)
     stk = result.first()
     db.close()
@@ -204,8 +204,8 @@ def get_malawi_waiting(msisdn, amount):
 
 def get_stk_waiting(msisdn, amount):
     db = get_db()
-    stmt = select(stk_waiting).where(stk_waiting.c.msisdn == msisdn).where(stk_waiting.c.fulfilled == False) \
-        .order_by(stk_waiting.c.id)
+    stmt = select(StkWaiting).where(StkWaiting.msisdn == msisdn).where(StkWaiting.fulfilled == False) \
+        .order_by(StkWaiting.id)
     result = db.execute(stmt)
     if result.rowcount == 1:
         stk = result.fetchone()
@@ -221,10 +221,10 @@ def get_stk_waiting(msisdn, amount):
     return stk
 
 
-def mark_stk_waiting_fulfilled(waiting_id, table=stk_waiting):
+def mark_stk_waiting_fulfilled(waiting_id, table):
     db = get_db()
     try:
-        db.execute(table.update().where(stk_waiting.c.id == waiting_id).values(fulfilled=True))
+        db.execute(table.__table__.update().where(table.id == waiting_id).values(fulfilled=True))
         db.commit()
     except Exception as x:
         logger.exception(x)
@@ -239,7 +239,7 @@ def mark_stk_waiting_fulfilled(waiting_id, table=stk_waiting):
 def add_upline(msisdn, upline_id):
     db = get_db()
     try:
-        db.execute(users.update().where(users.c.msisdn == msisdn).values(invited_by_id=upline_id))
+        db.execute(User.__table__.update().where(User.msisdn == msisdn).values(invited_by_id=upline_id))
         db.commit()
     except Exception as x:
         logger.exception(x)
@@ -270,8 +270,8 @@ def get_number_of_days_used_not_paid(msisdn):
 
 def get_paid_for_key():
     db = get_db()
-    stmt = select(openai_keys) \
-        .where(openai_keys.c.enabled == True)
+    stmt = select(OpenAIKey) \
+        .where(OpenAIKey.enabled == True)
     result = db.execute(stmt).fetchall()
     db.close()
 
@@ -282,7 +282,7 @@ def get_paid_for_key():
 def save_new_advert(advert_name, advert_text, version=2):
     db = get_db()
     try:
-        db.execute(bot_adverts.insert(), {
+        db.execute(BotAdvert.__table__.insert(), {
             'name': advert_name,
             'advert_text': advert_text,
         })
@@ -300,7 +300,7 @@ def save_new_received_sms(from_, sms_text, sent_timestamp, received_timestamp, s
     db = get_db()
     response = True
     try:
-        db.execute(received_sms.insert(), {
+        db.execute(ReceivedSMS.__table__.insert(), {
             'from': from_,
             'text': sms_text,
             'sent_timestamp': sent_timestamp,
@@ -323,7 +323,7 @@ def save_new_received_sms(from_, sms_text, sent_timestamp, received_timestamp, s
 def save_index_sms(from_, sms_text, sent_timestamp, received_timestamp, sim, version=2):
     db = get_db()
     try:
-        db.execute(sms_index.insert(), {
+        db.execute(SMSIndex.__table__.insert(), {
             'from': from_,
             'text': sms_text,
             'sent_timestamp': sent_timestamp,
@@ -343,8 +343,8 @@ def save_index_sms(from_, sms_text, sent_timestamp, received_timestamp, sim, ver
 
 def get_active_adverts():
     db = get_db()
-    stmt = select(bot_adverts).where(bot_adverts.c.active == True) \
-        .order_by(bot_adverts.c.id)
+    stmt = select(BotAdvert).where(BotAdvert.active == True) \
+        .order_by(BotAdvert.id)
     result = db.execute(stmt)
     data = result.fetchall()
 
