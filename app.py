@@ -257,9 +257,13 @@ def v2_messages_view():
     logger.info("-----------------V2 MESSAGE---------------------------")
     logger.info(data)
 
+    if data.get('self'):
+        logger.info("Cannot respond to self message")
+        return {'error': 'not responding to self messages'}
+
     if data.get('server') == 'g.us':
         logger.info("Not responding to groups")
-        return {'message': 'not processing groups'}
+        return {'error': 'not processing groups'}
     try:
         q.enqueue(handle_save_user, data['from'], data['body'], data['sender'])
         kwargs = {'msisdn': data['from'], 'text': data.get('body'), 'client_id': data.get('client_id'), 'version': 2}
