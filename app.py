@@ -253,68 +253,16 @@ def index():
 
 @app.route("/v2/messages", methods=["GET", "POST"])
 def v2_messages_view():
-    msg_payload = request.json
+    data = request.json
     logger.info("-----------------V2 MESSAGE---------------------------")
-    logger.info(msg_payload)
-    if msg_payload.get('type') != 'message':
-        logger.info(f"msg_payload is not a message. type is {msg_payload.get('type')}")
-        return {'message': 'not a message'}
-
-    if msg_payload.get('body').get('key').get('fromMe'):
-        logger.info("This is a self message. nothing to do")
-        return {'message': 'not replying to own messages'}
+    logger.info(data)
     try:
-        try:
-            msg = msg_payload.get('body').get('message').get('extendedTextMessage').get('text')
-        except Exception as x:
-            logger.exception(x)
-            msg = msg_payload.get('body').get('message').get('conversation')
-
-        from_, server = msg_payload.get('body').get('key').get('remoteJid').split("@")
-        data = {
-            "from": from_,
-            "body": msg,
-            "ack": 1,
-            "client_id": msg_payload.get('instanceKey'),
-            "to": '',
-            "sender": {
-                "name": msg_payload.get('body').get('pushName'),
-            }
-        }
-
         q.enqueue(handle_save_user, data['from'], data['body'], data['sender'])
         kwargs = {'msisdn': data['from'], 'text': data.get('body'), 'client_id': data.get('client_id'), 'version': 2}
         body = data.get('body')
         client_id = data.get('client_id')
         msisdn = data.get('from')
         logger.info(f"REQUEST: {data}")
-
-        if server == 'g.us':
-            return {'message': 'not processing groups'}
-            # if from_ not in os.environ.get('SUPPORT_GROUPS', '120363127313593286@g.us').split(','):
-            #     return jsonify({'message': 'not handling groups'})
-            # sim_values = [d for d in body.split(' ') if d]
-            # sim_no = sim_values[0]
-            # from_ = parse_msisdn(sim_no, log=False)
-            # if not from_:
-            #     return jsonify({'message': 'not handling groups'})
-            # from_ += '@s.whatsapp.net'
-            # body = ' '.join(sim_values[1:])
-            #
-            # # get client_id from the author of the message
-            # author = msg_payload.get('body').get('key').get('participant').split("@")
-            # client_id = r.hget(BOT_NUMBERS, author)
-            # if not client_id:
-            #     logger.error(f'No client id found for simulated message. author -> {author}')
-            #     return jsonify({'message': 'not handling groups'})
-            #
-            # # save message_id to prevent processing it again
-            # msg_id = d.get('id')
-            # logger.info(f'simulation message id -> {msg_id}')
-            # added = add_simulated_msg_id(msg_id)
-            # if not added:
-            #     logger.info("Simulation Message not inserted. Probably it has been processed before")
-            #     return jsonify({'message': 'not handling groups'})
 
         if body.lower().startswith('.join') or body.lower().startswith('.stop'):
             q.enqueue(handle_lesson_subscription, args=(msisdn, data.get('sender').get('name'), body, client_id, 2))
