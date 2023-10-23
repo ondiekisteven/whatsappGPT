@@ -256,6 +256,10 @@ def v2_messages_view():
     data = request.json
     logger.info("-----------------V2 MESSAGE---------------------------")
     logger.info(data)
+
+    if data.get('server') == 'g.us':
+        logger.info("Not responding to groups")
+        return {'message': 'not processing groups'}
     try:
         q.enqueue(handle_save_user, data['from'], data['body'], data['sender'])
         kwargs = {'msisdn': data['from'], 'text': data.get('body'), 'client_id': data.get('client_id'), 'version': 2}
