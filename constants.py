@@ -49,7 +49,7 @@ logging.config.dictConfig({
             "mode": "a",
             "encoding": "utf-8",
             "maxBytes": 5000000,
-            "backupCount": 20
+            "backupCount": 50
         }
     },
 

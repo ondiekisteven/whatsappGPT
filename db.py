@@ -131,7 +131,7 @@ class SMSIndex(db.Model):
     __tablename__ = 'sms_index'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    sender = db.Column(db.String(255), nullable=False)
+    from_ = db.Column(db.String(255), nullable=False, name='from')
     text = db.Column(db.Text)
     sent_timestamp = db.Column(db.String(255), nullable=False)
     received_timestamp = db.Column(db.String(255), nullable=False)
