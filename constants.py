@@ -145,7 +145,7 @@ RENEW_SUBSCRIPTION_MESSAGE = """
 
 Pay {symbol}. {upgrade_amount} to continue using the bot for the next one month
 
-Thanks for being a valued user of Sonia Bot
+*REPLY WITH THE WORD pay*
 """
 
 REFERRAL_CODE_NOT_FOUND_MESSAGE = """*Invalid Referral Code*. The referral code you sent does not exist. 
