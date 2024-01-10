@@ -89,8 +89,8 @@ def handle_pay_prompt(msisdn, text, client_id, version):
     if country_code == 254:
         handle_payment_kenya(msisdn=msisdn, payment_no=payment_no, client_id=client_id, version=version)
 
-    elif country_code == 265:
-        handle_payment_malawi(msisdn=msisdn, client_id=client_id, version=version)
+    # elif country_code == 265:
+    #     handle_payment_malawi(msisdn=msisdn, client_id=client_id, version=version)
 
 
 def extract_details(message):
