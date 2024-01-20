@@ -394,7 +394,7 @@ class AdvertHandler:
         high.enqueue(send_message_base, args=(
             self.client_id,
             self.msisdn,
-            self.advert.text,
+            self.advert.Text,
             self.version,
             f'ADVERT-{session_id}',
             'advert'
