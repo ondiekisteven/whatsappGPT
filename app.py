@@ -128,6 +128,7 @@ def flutter_callback():
     # }
 
     data = request.json
+    logger.info(data)
     if 'event' in data and data['event'] == 'charge.completed':
         event_type = data['event.type']
         tx_ref = data['data']['tx_ref']
