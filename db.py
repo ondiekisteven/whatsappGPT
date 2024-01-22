@@ -184,3 +184,25 @@ class SMSIndex(db.Model):
     sim = db.Column(db.String(150), nullable=True)
     version = db.Column(db.Integer, default=2)
     date_created = db.Column(db.DateTime(timezone=True), server_default=func.now())
+
+
+class IncomingWA(db.Model):
+    __tablename__ = 'incoming_wa'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    chat_id = db.Column(db.String(255), nullable=False)
+    client_id = db.Column(db.String(255), nullable=False)
+    text = db.Column(db.Text)
+
+    date_created = db.Column(db.DateTime(timezone=True), server_default=func.now())
+
+
+class Music(db.Model):
+    __tablename__ = 'music'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    title = db.Column(db.String(255), nullable=True)
+    lyrics = db.Column(db.Text)
+    filename = db.Column(db.String(200))
+    fullpath = db.Column(db.String(255))
+    date_created = db.Column(db.DateTime(timezone=True), server_default=func.now())

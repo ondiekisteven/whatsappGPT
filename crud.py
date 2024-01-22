@@ -202,6 +202,54 @@ def save_malawi_waiting(msisdn, client_id, amount, target, version=2):
         db.close()
 
 
+def save_malawi_flutter_waiting(msisdn, client_id, amount, target, payment_url, network, trx_ref, version=2):
+    db = get_db()
+    try:
+        db.execute(MalawiFlutterPaymentsWaiting.__table__.insert(), {
+            "msisdn": msisdn,
+            "client_id": client_id,
+            "amount": amount,
+            "target": target,
+            "fulfilled": False,
+            "payment_url": payment_url,
+            "network": network,
+            "trx_ref": trx_ref,
+            "version": version
+        })
+        db.commit()
+    except Exception as x:
+        logger.exception(x)
+        db.rollback()
+    else:
+        pass
+    finally:
+        db.close()
+
+
+def save_tanzania_waiting(msisdn, client_id, amount, target, trx_ref, email, full_name, version=2):
+    db = get_db()
+    try:
+        db.execute(TanzaniaPaymentsWaiting.__table__.insert(), {
+            'msisdn': msisdn,
+            'client_id': client_id,
+            'amount': amount,
+            'target': target,
+            'version': version,
+            'trx_ref': trx_ref,
+            'email': email,
+            'full_name': full_name
+
+        })
+        db.commit()
+    except Exception as x:
+        logger.exception(x)
+        db.rollback()
+    else:
+        pass
+    finally:
+        db.close()
+
+
 def get_malawi_waiting(msisdn, amount):
     db = get_db()
     stmt = select(MalawiPaymentsWaiting) \
@@ -374,3 +422,12 @@ def get_active_adverts():
 
     db.close()
     return data
+
+
+def get_songs():
+    db = get_db()
+    stmt = select(Music)
+    result = db.execute(stmt).fetchall()
+    db.close()
+
+    return result
