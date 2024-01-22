@@ -12,13 +12,14 @@ from flask_restless import APIManager
 from rq import Queue, Retry
 
 import crud
-from constants import PAYMENT_RECEIVED_MESSAGE, BOT_NUMBERS, paymentsq, confg, PAID
-from db import db, StkWaiting, MpesaPayment, MalawiPayment, ReceivedSMS, User, Message
+from constants import PAYMENT_RECEIVED_MESSAGE, BOT_NUMBERS, paymentsq, confg, PAID, MALAWI_UPGRADE_AMOUNT, \
+    MALAWI_PAYMENT_RECEIVED_MESSAGE
+from db import db, StkWaiting, MpesaPayment, MalawiPayment, ReceivedSMS, User, Message, MalawiFlutterPaymentsWaiting
 from engine import r, handle_prompt
 from helpers import send_notification, get_session_id, add_paid, parse_msisdn, add_simulated_msg_id, \
     handle_referral_msg, handle_getting_code, handle_lesson_subscription, handle_save_user
 from pgw import handle_pay_prompt, handle_malawi_sms
-from schema import PaymentBase
+from schema import PaymentBase, FlutterwavePayment
 
 logger = logging.getLogger(__name__)
 
@@ -88,6 +89,111 @@ def sms_index():
     except Exception as x:
         logger.exception(x)
         raise
+
+
+@app.route('/flutter-callback', methods=['POST'])
+def flutter_callback():
+    pass
+    # paymentsq
+    # ---------sample data-----------
+    # {
+    #     "event": "charge.completed",
+    #     "data": {
+    #         "id": 1225462655,
+    #         "tx_ref": "SONIA004_254726422225",
+    #         "flw_ref": "DRT8289244772328724",
+    #         "device_fingerprint": "N/A",
+    #         "amount": 50,
+    #         "currency": "KES",
+    #         "charged_amount": 50,
+    #         "app_fee": 1.45,
+    #         "merchant_fee": 0,
+    #         "processor_response": "Transaction was successful",
+    #         "auth_model": "LIPA_MPESA",
+    #         "ip": "54.154.184.168",
+    #         "narration": "FLW-PBF MPESA Transaction ",
+    #         "status": "successful",
+    #         "payment_type": "mpesa",
+    #         "created_at": "2024-01-20T19:09:18.000Z",
+    #         "account_id": 2820539,
+    #         "customer": {
+    #             "id": 771657736,
+    #             "name": "Nick Lee",
+    #             "phone_number": "254726422225",
+    #             "email": "www.leenick@gmail.com",
+    #             "created_at": "2024-01-20T19:09:18.000Z"
+    #         }
+    #     },
+    #     "event.type": "MPESA_TRANSACTION"
+    # }
+
+    data = request.json
+    if 'event' in data and data['event'] == 'charge.completed':
+        event_type = data['event.type']
+        tx_ref = data['data']['tx_ref']
+        amount = data['data']['amount']
+        currency = data['data']['currency']
+        phone_number = data['data']['customer']['phone_number']
+        status = data['data']['status']
+        flw_ref = data['data']['flw_ref']
+
+        waiting = crud.get_malawi_flutter_waiting(phone_number, amount)
+        if waiting:
+            crud.mark_stk_waiting_fulfilled(waiting.id, table=MalawiFlutterPaymentsWaiting)
+            client_id = waiting.client_id
+            target = waiting.target
+            version = waiting.version
+            notify = True
+        else:
+            logger.warning("Payment has no matching waiting record. Using Default Client ID")
+            client_id = os.getenv('DEFAULT_CLIENT_ID')
+            target = phone_number
+            version = 2
+            notify = True
+        expiry = None
+        if status == 'successful':
+            expiry = datetime.now() + timedelta(days=30)
+            added = add_paid(target, expiry)
+            logger.info(f"Adding to paid users: target -> {target}, expiry -> {expiry}, added -> {added}")
+
+        payment = FlutterwavePayment(
+            amount=int(float(amount)),
+            msisdn=phone_number,
+            trx_id=tx_ref,
+            request_dump=json.dumps(data),
+            channel=event_type,
+            client_id=client_id,
+            target=phone_number,
+            event_type=event_type,
+            status=status,
+            flw_ref=flw_ref,
+            version=version
+        )
+        crud.save_flutter_malawi_payment(payment)
+
+        logger.info(f"Sending notification to {target} using {client_id}")
+        if payment.amount < MALAWI_UPGRADE_AMOUNT:
+            logger.info("Not sending notification .")
+            return {'message': 'success'}
+        if notify and status == 'successful':
+            send_notification(
+                client_id,
+                payment.msisdn,
+                version,
+                get_session_id(client_id, payment.msisdn),
+                MALAWI_PAYMENT_RECEIVED_MESSAGE.format(
+                    amount=payment.amount,
+                    msisdn=payment.msisdn,
+                    trx_id=payment.trx_id,
+                    expiry=expiry.strftime("%d/%m/%Y, %H:%M")
+                )
+            )
+
+        logger.info("-" * 100)
+        return {'message': 'success'}
+
+    logger.info("Received strange request...")
+    return {'message': 'success'}
 
 
 @app.route('/payment', methods=['POST'])
@@ -277,8 +383,11 @@ def v2_messages_view():
             return {'message': 'success'}
 
         if body.upper().startswith('REF') and ' ' not in body:
-            q.enqueue(handle_referral_msg, args=(data, 2))
-            # handle_referral_msg(d)
+            if os.getenv('ENVIRONMENT', 'development') == 'development':
+                handle_referral_msg(data, 2)
+            else:
+                q.enqueue(handle_referral_msg, args=(data, 2))
+
             return {'message': 'success'}
         if body.upper() in ['STOP', 'HI']:
             sn_id = str(datetime.now().timestamp())
@@ -287,14 +396,19 @@ def v2_messages_view():
                 return {'message': 'stopped'}
         _body = body.lower().replace('"', '').replace("'", "").split(" ")[0]
         if _body in ['/pay', 'pay', '.pay', '"pay"', '"/pay"', "'pay'", "'/pay'"]:
-            q.enqueue(handle_pay_prompt, kwargs=kwargs)
-            #handle_pay_prompt(**kwargs)
+            if os.getenv('ENVIRONMENT', 'development') == 'development':
+                handle_pay_prompt(**kwargs)
+            else:
+                q.enqueue(handle_pay_prompt, kwargs=kwargs)
             return {'message': 'success'}
         if _body in ['/code']:
             q.enqueue(handle_getting_code, args=(data, 2))
         else:
-            q.enqueue(handle_prompt, kwargs=kwargs, retry=Retry(max=4, interval=60))
-            # handle_prompt(**kwargs)
+            if os.getenv('ENVIRONMENT', 'development') == 'development':
+                handle_prompt(**kwargs)
+            else:
+                q.enqueue(handle_prompt, kwargs=kwargs, retry=Retry(max=4, interval=60))
+
         return {'message': 'success'}
     except Exception as x:
         logger.exception(x)

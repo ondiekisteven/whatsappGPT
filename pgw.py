@@ -7,7 +7,8 @@ import requests
 
 import crud
 from constants import STK_PUSH_SENT_MESSAGE, high, logger, MALAWI_PAYMENT_REQUESTED_MESSAGE, phones_mapping, \
-    MALAWI_PAYMENT_RECEIVED_MESSAGE, MALAWI_UPGRADE_AMOUNT
+    MALAWI_PAYMENT_RECEIVED_MESSAGE, MALAWI_UPGRADE_AMOUNT, TANZANIA_PAYMENT_REQUESTED_MESSAGE, malawi_network_mapping, \
+    MALAWI_PAYMENT_REQUESTED_MESSAGE_V2, MALAWI_PAYMENT_REQUEST_FAILED_V2
 from db import MalawiPaymentsWaiting
 from helpers import get_session_id, parse_msisdn, get_upgrade_amount, add_paid, send_notification
 from schema import PaymentBase
@@ -63,16 +64,89 @@ def handle_payment_kenya(msisdn, payment_no, client_id, version=2):
             client_id, msisdn), 'notification'))
 
 
+def handle_payment_tanzania(msisdn, client_id, email, trx_ref, version=2):
+    currency = get_upgrade_amount(msisdn)
+
+    crud.save_tanzania_waiting(
+        msisdn, client_id, currency.amount, target=msisdn, trx_ref=trx_ref, email=email, full_name='', version=version)
+
+    resp_msg = TANZANIA_PAYMENT_REQUESTED_MESSAGE.format(
+        phone_number=msisdn,
+    )
+
+    high.enqueue(send_message_base, args=(client_id, msisdn, resp_msg, version, get_session_id(
+        client_id, msisdn), 'notification'))
+
+
+def initiate_payment_malawi(trx_ref, amount, network, email, phone, name, token, currency='MWK', url=None):
+    payload = {
+        "tx_ref": trx_ref,
+        "amount": amount,
+        "currency": currency,
+        "network": network,
+        "email": email,
+        "phone_number": phone,
+        "fullname": name
+    }
+
+    headers = {
+        'Authorization': f'Bearer {token}'
+    }
+
+    resp = requests.post(url, json=payload, headers=headers)
+
+    if resp.status_code == 200:
+        # --------- sample success response -----------
+        # {
+        #     "status": "success",
+        #     "message": "Charge initiated",
+        #     "meta": {
+        #         "authorization": {
+        #             "redirect": "https://checkout.flutterwave.com/captcha/verify/lang-en/5350253:a53cb801ffe7c8",
+        #             "mode": "redirect"
+        #         }
+        #     }
+        # }
+        json_resp = json.loads(resp.text)
+        logger.info(f"Charge Initialization response: {resp.text}")
+        payment_url = json_resp['meta']['authorization']['redirect']
+        return payment_url
+    logger.info(f"Unsuccessful response: {resp.status_code} -> {resp.text}")
+
+
 def handle_payment_malawi(msisdn, client_id, version=2):
     currency = get_upgrade_amount(msisdn)
 
-    crud.save_malawi_waiting(msisdn, client_id, currency.amount, target=msisdn, version=version)
+    trx_ref = f"MLW-{str(datetime.now().timestamp()).split('.')[0]}-{msisdn}"
+    network = malawi_network_mapping.get(msisdn[3])
 
-    resp_msg = MALAWI_PAYMENT_REQUESTED_MESSAGE.format(
-        upgrade_amount=currency.amount,
-        receiving_number=phones_mapping.get(msisdn[3], '265884749249')[0],
-        receiving_name=phones_mapping.get(msisdn[3], 'Clara Banda')[1]
+    url = initiate_payment_malawi(
+        trx_ref=trx_ref,
+        amount=currency.amount,
+        network=network,
+        email=f'sonia_{msisdn}@somwaki.com',
+        phone=msisdn,
+        name=msisdn,
+        token=os.getenv('FLUTTERWAVE_TOKEN'),
+        url='https://api.flutterwave.com/v3/charges?type=mobile_money_malawi'
     )
+    if url:
+        crud.save_malawi_flutter_waiting(
+            msisdn=msisdn,
+            client_id=client_id,
+            amount=currency.amount,
+            target=msisdn,
+            version=version,
+            payment_url=url,
+            trx_ref=trx_ref,
+            network=network
+        )
+        resp_msg = MALAWI_PAYMENT_REQUESTED_MESSAGE_V2.format(
+            payment_url=url
+        )
+    else:
+        resp_msg = MALAWI_PAYMENT_REQUEST_FAILED_V2
+
     high.enqueue(send_message_base, args=(client_id, msisdn, resp_msg, version, get_session_id(
         client_id, msisdn), 'notification'))
 
@@ -119,7 +193,8 @@ def extract_details(message):
 
             details = {
                 "transaction_id": match.group('transaction_id'),
-                "msisdn": match.group('msisdn') if match.group('msisdn').startswith('265') else F"265{match.group('msisdn')}",
+                "msisdn": match.group('msisdn') if match.group('msisdn').startswith(
+                    '265') else F"265{match.group('msisdn')}",
                 "name": match.group('name'),
                 "amount": amount
             }
@@ -130,7 +205,7 @@ def extract_details(message):
 
 
 def handle_malawi_sms(from_, text, sent, received, sim):
-    logger.info("-"*100)
+    logger.info("-" * 100)
     try:
         saved = crud.save_new_received_sms(
             from_=from_,

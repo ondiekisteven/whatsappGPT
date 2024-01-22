@@ -22,3 +22,6 @@ config.yaml
 *.log
 
 logs/
+
+test.py
+music

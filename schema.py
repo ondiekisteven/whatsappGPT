@@ -23,6 +23,15 @@ class PaymentBase(BaseModel):
     request_dump: str
 
 
+class FlutterwavePayment(PaymentBase):
+    client_id: str
+    target: str
+    event_type: str
+    status: str
+    flw_ref: str
+    version: int
+
+
 class Payment(PaymentBase):
     id: int
     date_created: datetime

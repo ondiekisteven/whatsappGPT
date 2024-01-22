@@ -4,8 +4,8 @@ from sqlalchemy import select, text
 
 from constants import engine, logger
 from db import User, MpesaPayment, MalawiPayment, MalawiPaymentsWaiting, Message, OpenAIKey, StkWaiting, BotAdvert, \
-    ReceivedSMS, SMSIndex
-from schema import UserBase, PaymentBase
+    ReceivedSMS, SMSIndex, Music, TanzaniaPaymentsWaiting, MalawiFlutterPaymentsWaiting, MalawiFlutterPayments
+from schema import UserBase, PaymentBase, FlutterwavePayment
 
 
 def get_db():
@@ -110,6 +110,18 @@ def save_malawi_payment(payment: PaymentBase):
         db.close()
 
 
+def save_flutter_malawi_payment(payment: FlutterwavePayment):
+    db = get_db()
+    try:
+        db.execute(MalawiFlutterPayments.__table__.insert(), payment.dict())
+        db.commit()
+    except Exception as x:
+        logger.exception(x)
+        db.rollback()
+    finally:
+        db.close()
+
+
 def get_last_payment(msisdn):
     db = get_db()
     stmt = select(MpesaPayment).where(MpesaPayment.msisdn == msisdn).order_by(MpesaPayment.date_created.desc()).limit(1)
@@ -196,6 +208,18 @@ def get_malawi_waiting(msisdn, amount):
         .where(MalawiPaymentsWaiting.msisdn == msisdn) \
         .where(MalawiPaymentsWaiting.fulfilled == False) \
         .order_by(MalawiPaymentsWaiting.id.desc())
+    result = db.execute(stmt)
+    stk = result.first()
+    db.close()
+    return stk
+
+
+def get_malawi_flutter_waiting(msisdn, amount):
+    db = get_db()
+    stmt = select(MalawiPaymentsWaiting) \
+        .where(MalawiFlutterPaymentsWaiting.msisdn == msisdn) \
+        .where(MalawiFlutterPaymentsWaiting.fulfilled == False) \
+        .order_by(MalawiFlutterPaymentsWaiting.id.desc())
     result = db.execute(stmt)
     stk = result.first()
     db.close()

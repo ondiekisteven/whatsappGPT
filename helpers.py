@@ -421,7 +421,7 @@ def send_advert(msisdn, client_id, session_id, version):
 def get_upgrade_amount(msisdn) -> currency_obj:
     mapping = {
         'KENYA': currency_obj(symbol='Kes', amount=KENYA_UPGRADE_AMOUNT),
-        'TANZANIA': currency_obj(symbol='Tsh', amount=TANZANIA_UPGRADE_AMOUNT),
+        'TANZANIA': currency_obj(symbol='TSH', amount=TANZANIA_UPGRADE_AMOUNT),
         'MALAWI': currency_obj(symbol='MWK', amount=MALAWI_UPGRADE_AMOUNT),
     }
 

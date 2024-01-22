@@ -97,6 +97,26 @@ IF YOU SEND MONEY, IT WILL GET LOST.
 Contact customer care for assistance +254742976667
 """
 
+MALAWI_PAYMENT_REQUESTED_MESSAGE_V2 = """Payment Initiated. Click on the link below, then enter the otp sent to your whatsapp and sms from *Flutterwave*. 
+Once entered, you will receive an stk push on your phone. Enter your pin to complete the transaction.
+
+After paying, wait for up to 20 minutes, for payments to reflect. 
+
+
+Click here to continue: 
+{payment_url}
+"""
+
+MALAWI_PAYMENT_REQUEST_FAILED_V2 = """We are unable to initiate the payment. Please try again. 
+
+If the problem persists, contact our customer care number at: +254742976667 or +254726422225"""
+
+TANZANIA_PAYMENT_REQUESTED_MESSAGE = """We have sent an stk push to your number: {phone_number}.
+ Enter your pin to confirm the payment. 
+
+Thank you for using Sonia AI
+"""
+
 MALAWI_PAYMENT_RECEIVED_MESSAGE = \
     """Your payment of MWK {amount} has been successfully received. Your transaction ID is {trx_id}.
 
@@ -132,7 +152,7 @@ SIMULATED = 'SIMULATED_MESSAGE_IDS'
 PREMIUM_USERS = 'PREMIUM_USERS'
 
 KENYA_UPGRADE_AMOUNT = int(os.getenv('KENYA_UPGRADE_AMOUNT', 100))
-TANZANIA_UPGRADE_AMOUNT = int(os.getenv('TANZANIA_UPGRADE_AMOUNT', 250))
+TANZANIA_UPGRADE_AMOUNT = int(os.getenv('TANZANIA_UPGRADE_AMOUNT', 2500))
 MALAWI_UPGRADE_AMOUNT = int(os.getenv('MALAWI_UPGRADE_AMOUNT', 1000))
 FREE_RESPONSES = int(os.getenv('FREE_RESPONSES', 10))
 FREE_TRIAL = int(os.getenv('FREE_TRIAL_PERIOD', 7))
@@ -257,6 +277,11 @@ currency_obj = namedtuple('currency_obj', ('symbol', 'amount'))
 phones_mapping = {
     '9': ('265992641392', 'Dolika Nkhoma'),
     '8': ('265884749249', 'Clara Banda'),
+}
+
+malawi_network_mapping = {
+    '9': 'Airtel',
+    '8': 'Mpamba',
 }
 
 SECONDS_BEFORE_ADVERT = int(os.getenv('SECONDS_BEFORE_ADVERT', '10'))
