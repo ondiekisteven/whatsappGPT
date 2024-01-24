@@ -105,7 +105,12 @@ class MalawiFlutterPaymentsWaiting(db.Model):
     payment_url = db.Column(db.Text)
     network = db.Column(db.String(50))
     trx_ref = db.Column(db.String(50))
+    trx_id = db.Column(db.Integer)
+    payload = db.Column(db.Text)
     version = db.Column(db.Integer, default=1)
+
+    def __str__(self):
+        return f"<MalawiPaymentsWaiting {self.id} msisdn: {self.msisdn} target: {self.target} trx_ref: {self.trx_ref}"
 
 
 class MalawiFlutterPayments(db.Model):

@@ -202,7 +202,8 @@ def save_malawi_waiting(msisdn, client_id, amount, target, version=2):
         db.close()
 
 
-def save_malawi_flutter_waiting(msisdn, client_id, amount, target, payment_url, network, trx_ref, version=2):
+def save_malawi_flutter_waiting(
+        msisdn, client_id, amount, target, payment_url, network, trx_ref, trx_id, payload, version=2):
     db = get_db()
     try:
         db.execute(MalawiFlutterPaymentsWaiting.__table__.insert(), {
@@ -214,6 +215,8 @@ def save_malawi_flutter_waiting(msisdn, client_id, amount, target, payment_url, 
             "payment_url": payment_url,
             "network": network,
             "trx_ref": trx_ref,
+            "trx_id": trx_id,
+            "payload": payload,
             "version": version
         })
         db.commit()
@@ -264,7 +267,7 @@ def get_malawi_waiting(msisdn, amount):
 
 def get_malawi_flutter_waiting(msisdn, amount):
     db = get_db()
-    stmt = select(MalawiPaymentsWaiting) \
+    stmt = select(MalawiFlutterPaymentsWaiting) \
         .where(MalawiFlutterPaymentsWaiting.msisdn == msisdn) \
         .where(MalawiFlutterPaymentsWaiting.fulfilled == False) \
         .order_by(MalawiFlutterPaymentsWaiting.id.desc())

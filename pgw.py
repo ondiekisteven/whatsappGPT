@@ -9,9 +9,9 @@ import crud
 from constants import STK_PUSH_SENT_MESSAGE, high, logger, MALAWI_PAYMENT_REQUESTED_MESSAGE, phones_mapping, \
     MALAWI_PAYMENT_RECEIVED_MESSAGE, MALAWI_UPGRADE_AMOUNT, TANZANIA_PAYMENT_REQUESTED_MESSAGE, malawi_network_mapping, \
     MALAWI_PAYMENT_REQUESTED_MESSAGE_V2, MALAWI_PAYMENT_REQUEST_FAILED_V2
-from db import MalawiPaymentsWaiting
+from db import MalawiPaymentsWaiting, MalawiFlutterPaymentsWaiting
 from helpers import get_session_id, parse_msisdn, get_upgrade_amount, add_paid, send_notification
-from schema import PaymentBase
+from schema import PaymentBase, FlutterwavePayment
 from wp import send_message_base
 
 
@@ -110,7 +110,8 @@ def initiate_payment_malawi(trx_ref, amount, network, email, phone, name, token,
         json_resp = json.loads(resp.text)
         logger.info(f"Charge Initialization response: {resp.text}")
         payment_url = json_resp['meta']['authorization']['redirect']
-        return payment_url
+        return payment_url, json_resp
+
     logger.info(f"Unsuccessful response: {resp.status_code} -> {resp.text}")
 
 
@@ -120,7 +121,7 @@ def handle_payment_malawi(msisdn, client_id, version=2):
     trx_ref = f"MLW-{str(datetime.now().timestamp()).split('.')[0]}-{msisdn}"
     network = malawi_network_mapping.get(msisdn[3])
 
-    url = initiate_payment_malawi(
+    url, payload = initiate_payment_malawi(
         trx_ref=trx_ref,
         amount=currency.amount,
         network=network,
@@ -139,7 +140,9 @@ def handle_payment_malawi(msisdn, client_id, version=2):
             version=version,
             payment_url=url,
             trx_ref=trx_ref,
-            network=network
+            network=network,
+            payload=json.dumps(payload),
+            trx_id=None
         )
         resp_msg = MALAWI_PAYMENT_REQUESTED_MESSAGE_V2.format(
             payment_url=url
@@ -239,7 +242,7 @@ def handle_malawi_sms(from_, text, sent, received, sim):
             client_id = os.getenv('DEFAULT_CLIENT_ID')
             target = msisdn
             version = 2
-            notify = False
+            notify = True
 
         expiry = datetime.now() + timedelta(days=30)
 
@@ -282,3 +285,76 @@ def handle_malawi_sms(from_, text, sent, received, sim):
 
         logger.info("-" * 100)
         return {'error': str(x)}
+
+
+def handle_flutterwave_webhook(data: dict):
+
+    if 'event' in data and data['event'] == 'charge.completed':
+        event_type = data['event.type']
+        tx_ref = data['data']['tx_ref']
+        amount = data['data']['amount']
+        currency = data['data']['currency']
+        phone_number = data['data']['customer']['phone_number']
+        status = data['data']['status']
+        flw_ref = data['data']['flw_ref']
+
+        if phone_number[:2] == '265':
+            waiting = crud.get_malawi_flutter_waiting(phone_number, amount)
+            if waiting:
+                logger.info(f"Waiting record found: {waiting}")
+                crud.mark_stk_waiting_fulfilled(waiting.id, table=MalawiFlutterPaymentsWaiting)
+                client_id = waiting.client_id
+                target = waiting.target
+                version = waiting.version
+                notify = True
+            else:
+                logger.warning("Payment has no matching waiting record. Using Default Client ID")
+                client_id = os.getenv('DEFAULT_CLIENT_ID')
+                target = phone_number
+                version = 2
+                notify = True
+            expiry = None
+            if status == 'successful':
+                expiry = datetime.now() + timedelta(days=30)
+                expiry_timestamp = expiry.timestamp()
+                logger.info(f"expiry: {expiry_timestamp}")
+                added = add_paid(target, expiry_timestamp)
+                logger.info(f"Adding to paid users: target -> {target}, expiry -> {expiry_timestamp}, added -> {added}")
+
+            payment = FlutterwavePayment(
+                amount=int(float(amount)),
+                msisdn=phone_number,
+                trx_id=tx_ref,
+                request_dump=json.dumps(data),
+                channel=event_type,
+                client_id=client_id,
+                target=phone_number,
+                event_type=event_type,
+                status=status,
+                flw_ref=flw_ref,
+                version=version
+            )
+            crud.save_flutter_malawi_payment(payment)
+
+            if payment.amount < MALAWI_UPGRADE_AMOUNT:
+                logger.info("Not sending notification .")
+                return {'message': 'success'}
+            if notify and status == 'successful':
+                logger.info(f"Sending notification to {target} using {client_id}")
+                send_notification(
+                    client_id,
+                    payment.msisdn,
+                    version,
+                    get_session_id(client_id, payment.msisdn),
+                    MALAWI_PAYMENT_RECEIVED_MESSAGE.format(
+                        amount=payment.amount,
+                        msisdn=payment.msisdn,
+                        trx_id=payment.trx_id,
+                        expiry=expiry.strftime("%d/%m/%Y, %H:%M")
+                    )
+                )
+
+            logger.info("-" * 100)
+            return {'message': 'success'}
+
+    logger.info("Received strange request...")

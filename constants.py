@@ -97,8 +97,11 @@ IF YOU SEND MONEY, IT WILL GET LOST.
 Contact customer care for assistance +254742976667
 """
 
-MALAWI_PAYMENT_REQUESTED_MESSAGE_V2 = """Payment Initiated. Click on the link below, then enter the otp sent to your whatsapp and sms from *Flutterwave*. 
-Once entered, you will receive an stk push on your phone. Enter your pin to complete the transaction.
+MALAWI_PAYMENT_REQUESTED_MESSAGE_V2 = """Payment Initiated. You will receive a message on your whatsapp and sms from *Flutterwave*. 
+
+Once once received, Click the link below to *enter the code*, then you will receive an stk push on your phone. 
+
+Enter your pin to complete the transaction.
 
 After paying, wait for up to 20 minutes, for payments to reflect. 
 
