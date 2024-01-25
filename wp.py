@@ -114,7 +114,7 @@ class V2Whatsapp:
 
         logger.info(".Sending media:... ")
         logger.info(f"REQUEST [{url} key-> {client_id}]: {m}")
-        r = requests.post(url=url, data=m,  headers={'Content-Type': m.content_type}, params={'key': client_id})
+        r = requests.post(url=url, data=m, headers={'Content-Type': m.content_type}, params={'key': client_id})
         logger.info(f"RESPONSE: [key-> {client_id}] {r.text}")
         try:
             json_resp = json.loads(r.text)
@@ -153,6 +153,12 @@ def _send_message_base(client_id, chat_id, message, version):
 
 
 def send_message_base(client_id, chat_id, message, version, session_id, role):
+    if os.getenv('ENABLE_CLIENT_ID_OVERRIDE', '0') == '1':
+        client_id_override = {
+            client_id: os.getenv(f'OVERRIDE_{client_id}', client_id)
+        }
+        client_id = client_id_override[client_id]
+
     send_resp: dict = _send_message_base(client_id, chat_id, message, version)
 
     new_msgs = [
