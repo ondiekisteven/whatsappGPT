@@ -154,10 +154,13 @@ def _send_message_base(client_id, chat_id, message, version):
 
 def send_message_base(client_id, chat_id, message, version, session_id, role):
     if os.getenv('ENABLE_CLIENT_ID_OVERRIDE', '0') == '1':
+        logger.info(f'client_id override enabled current client_id: {client_id}')
         client_id_override = {
             client_id: os.getenv(f'OVERRIDE_{client_id}', client_id)
         }
         client_id = client_id_override[client_id]
+        logger.info(f'mapping: {client_id_override}')
+        logger.info(f'client_id after override: {client_id}')
 
     send_resp: dict = _send_message_base(client_id, chat_id, message, version)
 
