@@ -246,7 +246,7 @@ def handle_malawi_sms(from_, text, sent, received, sim):
 
         expiry = datetime.now() + timedelta(days=30)
 
-        added = add_paid(target, expiry)
+        added = add_paid(target, expiry.timestamp())
         logger.info(f"Adding to paid users: target -> {target}, expiry -> {expiry}, added -> {added}")
 
         payment = PaymentBase(

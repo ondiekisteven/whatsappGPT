@@ -79,7 +79,7 @@ def decrement_response_count(msisdn: str):
         r.hincrby(NOT_PAID, msisdn, -1)
 
 
-def add_paid(msisdn, expiry: datetime):
+def add_paid(msisdn, expiry):
     return r.hset(PAID, msisdn, str(expiry))
 
 

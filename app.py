@@ -206,7 +206,7 @@ def payment_view():
                                          x in req['Body']['stkCallback']['CallbackMetadata']['Item']
                                          if x['Name'] == 'TransactionDate'][0]), '%Y%m%d%H%M%S')
             expiry = now + timedelta(days=30)
-            add_paid(target, expiry)
+            add_paid(target, expiry.timestamp())
             logger.info(f"Sending notification to {target} using {client_id}")
             send_notification(
                 client_id,

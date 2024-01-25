@@ -13,7 +13,7 @@ def reconcile_payments(msisdn):
         expiry = date_paid + timedelta(days=30)
         if expiry > datetime.now():
             logger.info(f"User has not expired. Expiry -> {expiry}")
-            add_paid(msisdn, expiry)
+            add_paid(msisdn, expiry.timestamp())
             logger.info(f"Done reconciling user: msisdn -> {msisdn}")
         else:
             logger.warning(f"User payment has expired. Msisdn -> {msisdn} Expiry: -> {expiry}")
