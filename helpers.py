@@ -150,7 +150,7 @@ def add_to_subscription_expired_and_notified(msisdn):
 
 def check_paid_status(msisdn: str):
     paid_expiry = r.hget(PAID, msisdn)
-
+    logger.info(f"EXPIRY: {paid_expiry}")
     if paid_expiry:
         paid_expiry = datetime.datetime.fromtimestamp(float(paid_expiry))
         if paid_expiry < datetime.datetime.now():
