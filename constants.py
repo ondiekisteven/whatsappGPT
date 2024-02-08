@@ -128,6 +128,14 @@ You now have unlimited access to Sonia AI for the next one month. Your subscript
 Thank you for using Sonia AI!
 """
 
+TANZANIA_PAYMENT_RECEIVED_MESSAGE = \
+    """Your payment of Tsh {amount} from {msisdn} has been successfully received. Your transaction ID is {trx_id}.
+
+You now have unlimited access to Sonia AI for the next one month. Your subscription expires on {expiry}.
+
+Thank you for using Sonia AI!
+"""
+
 PAYMENT_RECEIVED_MESSAGE = """
 We have successfully received a payment of Ksh. {amount} from {msisdn}, with transaction id {trx_id}. 
 

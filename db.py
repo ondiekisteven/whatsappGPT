@@ -128,6 +128,21 @@ class MalawiFlutterPayments(db.Model):
     version = db.Column(db.Integer, default=1)
 
 
+class TanzaniaFlutterPayments(db.Model):
+    __tablename__ = 'tanzania_flutter_payments'
+
+    id = db.Column(db.Integer, primary_key=True)
+    msisdn = db.Column(db.String(20), index=True)
+    client_id = db.Column(db.String(20))
+    amount = db.Column(db.Integer)
+    target = db.Column(db.String(20))
+    trx_id = db.Column(db.String(50))
+    event_type = db.Column(db.String(50))
+    status = db.Column(db.String(200))
+    flw_ref = db.Column(db.String(200))
+    version = db.Column(db.Integer, default=1)
+
+
 class TanzaniaPaymentsWaiting(db.Model):
     __tablename__ = 'tanzania_flutter_payments_waiting'
 

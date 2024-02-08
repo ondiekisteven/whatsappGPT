@@ -3,8 +3,7 @@ import random
 from sqlalchemy import select, text
 
 from constants import engine, logger
-from db import User, MpesaPayment, MalawiPayment, MalawiPaymentsWaiting, Message, OpenAIKey, StkWaiting, BotAdvert, \
-    ReceivedSMS, SMSIndex, Music, TanzaniaPaymentsWaiting, MalawiFlutterPaymentsWaiting, MalawiFlutterPayments
+from db import *
 from schema import UserBase, PaymentBase, FlutterwavePayment
 
 
@@ -114,6 +113,18 @@ def save_flutter_malawi_payment(payment: FlutterwavePayment):
     db = get_db()
     try:
         db.execute(MalawiFlutterPayments.__table__.insert(), payment.dict())
+        db.commit()
+    except Exception as x:
+        logger.exception(x)
+        db.rollback()
+    finally:
+        db.close()
+
+
+def save_flutter_payment(payment: FlutterwavePayment, table):
+    db = get_db()
+    try:
+        db.execute(table.__table__.insert(), payment.dict())
         db.commit()
     except Exception as x:
         logger.exception(x)
@@ -271,6 +282,18 @@ def get_malawi_flutter_waiting(msisdn, amount):
         .where(MalawiFlutterPaymentsWaiting.msisdn == msisdn) \
         .where(MalawiFlutterPaymentsWaiting.fulfilled == False) \
         .order_by(MalawiFlutterPaymentsWaiting.id.desc())
+    result = db.execute(stmt)
+    stk = result.first()
+    db.close()
+    return stk
+
+
+def get_tanzania_flutter_waiting(msisdn, amount):
+    db = get_db()
+    stmt = select(TanzaniaPaymentsWaiting) \
+        .where(TanzaniaPaymentsWaiting.msisdn == msisdn) \
+        .where(TanzaniaPaymentsWaiting.fulfilled == False) \
+        .order_by(TanzaniaPaymentsWaiting.id.desc())
     result = db.execute(stmt)
     stk = result.first()
     db.close()

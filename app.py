@@ -272,9 +272,19 @@ def index():
                 return jsonify({'message': 'not handling groups'})
 
         msisdn = from_.split('@')[0]
+
+        if d.get('from') == d.get('to'):
+            logger.info("not responding to self messages")
+            return jsonify({'error': 'self message'})
+
         kwargs = {'msisdn': msisdn, 'text': body, 'client_id': client_id, 'version': 1}
         if body.upper().startswith('REF') and ' ' not in body:
-            q.enqueue(handle_referral_msg, args=(d, 1))
+            if os.getenv('ENVIRONMENT', 'development') == 'development':
+                handle_referral_msg(d, 1)
+            else:
+                paymentsq.enqueue(handle_referral_msg, args=(d, 1))
+
+            # q.enqueue(handle_referral_msg, args=(d, 1))
             # handle_referral_msg(d)
             return {'message': 'success'}
         if body.upper() in ['STOP', 'HI']:
@@ -284,13 +294,26 @@ def index():
                 return {'message': 'stopped'}
         _body = body.lower().split(" ")[0]
         if _body in ['/pay', 'pay', '.pay']:
-            q.enqueue(handle_pay_prompt, kwargs=kwargs)
+            if os.getenv('ENVIRONMENT', 'development') == 'development':
+                handle_pay_prompt(**kwargs)
+            else:
+                paymentsq.enqueue(handle_pay_prompt, kwargs=kwargs)
             # handle_pay_prompt(**kwargs)
 
         elif _body in ['/code']:
-            q.enqueue(handle_getting_code, args=(d, 1))
+            if os.getenv('ENVIRONMENT', 'development') == 'development':
+                handle_getting_code(d, 1)
+            else:
+                paymentsq.enqueue(handle_getting_code, args=(d, 1))
+
+            # q.enqueue(handle_getting_code, args=(d, 1))
         else:
-            q.enqueue(handle_prompt, kwargs=kwargs, retry=Retry(max=4, interval=60))
+            if os.getenv('ENVIRONMENT', 'development') == 'development':
+                handle_prompt(**kwargs)
+            else:
+                paymentsq.enqueue(handle_prompt, kwargs=kwargs, retry=Retry(max=4, interval=60))
+
+            # q.enqueue(handle_prompt, kwargs=kwargs, retry=Retry(max=4, interval=60))
     else:
         logger.warning("Method Not Allowed")
     return {'message': 'success'}

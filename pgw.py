@@ -6,12 +6,10 @@ from datetime import datetime, timedelta
 import requests
 
 import crud
-from constants import STK_PUSH_SENT_MESSAGE, high, logger, MALAWI_PAYMENT_REQUESTED_MESSAGE, phones_mapping, \
-    MALAWI_PAYMENT_RECEIVED_MESSAGE, MALAWI_UPGRADE_AMOUNT, TANZANIA_PAYMENT_REQUESTED_MESSAGE, malawi_network_mapping, \
-    MALAWI_PAYMENT_REQUESTED_MESSAGE_V2, MALAWI_PAYMENT_REQUEST_FAILED_V2
-from db import MalawiPaymentsWaiting, MalawiFlutterPaymentsWaiting
-from helpers import get_session_id, parse_msisdn, get_upgrade_amount, add_paid, send_notification
-from schema import PaymentBase, FlutterwavePayment
+from constants import *
+from db import *
+from helpers import *
+from schema import *
 from wp import send_message_base
 
 
@@ -287,74 +285,150 @@ def handle_malawi_sms(from_, text, sent, received, sim):
         return {'error': str(x)}
 
 
-def handle_flutterwave_webhook(data: dict):
+country_functions_mapping = {
+    265: {
+        'get_waiting_fxn': crud.get_malawi_flutter_waiting,
 
+    }
+}
+
+
+def handle_malawi_webhook(phone_number, amount, status, trx_ref, data, event_type, flw_ref):
+    waiting = crud.get_malawi_flutter_waiting(phone_number, amount)
+    if waiting:
+        logger.info(f"Waiting record found: {waiting}")
+        crud.mark_stk_waiting_fulfilled(waiting.id, table=MalawiFlutterPaymentsWaiting)
+        client_id = waiting.client_id
+        target = waiting.target
+        version = waiting.version
+        notify = True
+    else:
+        logger.warning("Payment has no matching waiting record. Using Default Client ID")
+        client_id = os.getenv('DEFAULT_CLIENT_ID')
+        target = phone_number
+        version = 2
+        notify = True
+    expiry = None
+    if status == 'successful':
+        expiry = datetime.now() + timedelta(days=30)
+        expiry_timestamp = expiry.timestamp()
+        logger.info(f"expiry: {expiry_timestamp}")
+        added = add_paid(target, expiry_timestamp)
+        logger.info(f"Adding to paid users: target -> {target}, expiry -> {expiry_timestamp}, added -> {added}")
+
+    payment = FlutterwavePayment(
+        amount=int(float(amount)),
+        msisdn=phone_number,
+        trx_id=trx_ref,
+        request_dump=json.dumps(data),
+        channel=event_type,
+        client_id=client_id,
+        target=phone_number,
+        event_type=event_type,
+        status=status,
+        flw_ref=flw_ref,
+        version=version
+    )
+    crud.save_flutter_malawi_payment(payment)
+
+    if payment.amount < MALAWI_UPGRADE_AMOUNT:
+        logger.info("Not sending notification .")
+        return {'message': 'success'}
+    if notify and status == 'successful':
+        logger.info(f"Sending notification to {target} using {client_id}")
+        send_notification(
+            client_id,
+            payment.msisdn,
+            version,
+            get_session_id(client_id, payment.msisdn),
+            MALAWI_PAYMENT_RECEIVED_MESSAGE.format(
+                amount=payment.amount,
+                msisdn=payment.msisdn,
+                trx_id=payment.trx_id,
+                expiry=expiry.strftime("%d/%m/%Y, %H:%M")
+            )
+        )
+
+
+def handle_tanzania_webhook(phone_number, amount, status, trx_ref, data, event_type, flw_ref):
+    waiting = crud.get_tanzania_flutter_waiting(phone_number, amount)
+    if waiting:
+        logger.info(f"Waiting record found: {waiting}")
+        crud.mark_stk_waiting_fulfilled(waiting.id, table=TanzaniaPaymentsWaiting)
+        client_id = waiting.client_id
+        target = waiting.target
+        version = waiting.version
+        notify = True
+    else:
+        logger.warning("Payment has no matching waiting record. Using Default Client ID")
+        client_id = os.getenv('DEFAULT_CLIENT_ID')
+        target = phone_number
+        version = 2
+        notify = True
+    expiry = None
+    if status == 'successful':
+        expiry = datetime.now() + timedelta(days=30)
+        expiry_timestamp = expiry.timestamp()
+        logger.info(f"expiry: {expiry_timestamp}")
+        added = add_paid(target, expiry_timestamp)
+        logger.info(f"Adding to paid users: target -> {target}, expiry -> {expiry_timestamp}, added -> {added}")
+
+    payment = FlutterwavePayment(
+        amount=int(float(amount)),
+        msisdn=phone_number,
+        trx_id=trx_ref,
+        request_dump=json.dumps(data),
+        channel=event_type,
+        client_id=client_id,
+        target=phone_number,
+        event_type=event_type,
+        status=status,
+        flw_ref=flw_ref,
+        version=version
+    )
+    crud.save_flutter_payment(payment, table=TanzaniaFlutterPayments)
+
+    if payment.amount < TANZANIA_UPGRADE_AMOUNT:
+        logger.info("Not sending notification .")
+        return {'message': 'success'}
+    if notify and status == 'successful':
+        logger.info(f"Sending notification to {target} using {client_id}")
+        send_notification(
+            client_id,
+            payment.msisdn,
+            version,
+            get_session_id(client_id, payment.msisdn),
+            TANZANIA_PAYMENT_RECEIVED_MESSAGE.format(
+                amount=payment.amount,
+                msisdn=payment.msisdn,
+                trx_id=payment.trx_id,
+                expiry=expiry.strftime("%d/%m/%Y, %H:%M")
+            )
+        )
+
+
+def handle_flutterwave_webhook(data: dict):
     if 'event' in data and data['event'] == 'charge.completed':
         event_type = data['event.type']
-        tx_ref = data['data']['tx_ref']
+        trx_ref = data['data']['tx_ref']
         amount = data['data']['amount']
         currency = data['data']['currency']
         phone_number = data['data']['customer']['phone_number']
         status = data['data']['status']
         flw_ref = data['data']['flw_ref']
 
-        if phone_number[:2] == '265':
-            waiting = crud.get_malawi_flutter_waiting(phone_number, amount)
-            if waiting:
-                logger.info(f"Waiting record found: {waiting}")
-                crud.mark_stk_waiting_fulfilled(waiting.id, table=MalawiFlutterPaymentsWaiting)
-                client_id = waiting.client_id
-                target = waiting.target
-                version = waiting.version
-                notify = True
-            else:
-                logger.warning("Payment has no matching waiting record. Using Default Client ID")
-                client_id = os.getenv('DEFAULT_CLIENT_ID')
-                target = phone_number
-                version = 2
-                notify = True
-            expiry = None
-            if status == 'successful':
-                expiry = datetime.now() + timedelta(days=30)
-                expiry_timestamp = expiry.timestamp()
-                logger.info(f"expiry: {expiry_timestamp}")
-                added = add_paid(target, expiry_timestamp)
-                logger.info(f"Adding to paid users: target -> {target}, expiry -> {expiry_timestamp}, added -> {added}")
+        country_code, payment_no = parse_msisdn(phone_number)
 
-            payment = FlutterwavePayment(
-                amount=int(float(amount)),
-                msisdn=phone_number,
-                trx_id=tx_ref,
-                request_dump=json.dumps(data),
-                channel=event_type,
-                client_id=client_id,
-                target=phone_number,
-                event_type=event_type,
-                status=status,
-                flw_ref=flw_ref,
-                version=version
+        if country_code == 265:
+            handle_malawi_webhook(
+                phone_number, amount, status, trx_ref, data, event_type, flw_ref
             )
-            crud.save_flutter_malawi_payment(payment)
 
-            if payment.amount < MALAWI_UPGRADE_AMOUNT:
-                logger.info("Not sending notification .")
-                return {'message': 'success'}
-            if notify and status == 'successful':
-                logger.info(f"Sending notification to {target} using {client_id}")
-                send_notification(
-                    client_id,
-                    payment.msisdn,
-                    version,
-                    get_session_id(client_id, payment.msisdn),
-                    MALAWI_PAYMENT_RECEIVED_MESSAGE.format(
-                        amount=payment.amount,
-                        msisdn=payment.msisdn,
-                        trx_id=payment.trx_id,
-                        expiry=expiry.strftime("%d/%m/%Y, %H:%M")
-                    )
-                )
-
-            logger.info("-" * 100)
-            return {'message': 'success'}
+        elif country_code == 255:
+            handle_tanzania_webhook(
+                phone_number, amount, status, trx_ref, data, event_type, flw_ref
+            )
+        logger.info("-" * 100)
+        return {'message': 'success'}
 
     logger.info("Received strange request...")
