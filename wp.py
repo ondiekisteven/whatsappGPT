@@ -170,7 +170,7 @@ def send_message_base(client_id, chat_id, message, version, session_id, role):
          'msisdn': chat_id,
          'session_id': session_id,
          'client_id': client_id,
-         'message_id': send_resp['data']['key']['id'] if 'data' in send_resp and 'key' in send_resp['data'] else "",
+         'message_id': "",  # will look for a uniform way to get this
          'success': not send_resp['error'] if 'error' in send_resp else False
          }
     ]
