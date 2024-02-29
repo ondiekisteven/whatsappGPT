@@ -172,7 +172,7 @@ TRIAL_PERIOD_OVER = """Your Sonia bot trial is over, but the fun is just beginni
 
 *You can get unlimited use for a whole month by paying {symbol} {upgrade_amount}*.
 
-To get instructions on how to pay, simply reply with the word pay.
+To get instructions on how to pay, *SIMPLY REPLY WITH THE WORD PAY*.
 """
 
 RENEW_SUBSCRIPTION_MESSAGE = """
