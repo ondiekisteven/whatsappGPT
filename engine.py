@@ -89,6 +89,10 @@ def can_get_response(msisdn, client_id, version):
     logger.info(f'Credits Balance : {credits_count}')
     if credits_count == -1:
         return True, True
+
+    if client_id in os.getenv('FREE_CLIENTS').split(","):
+        logger.info(f"Client id {client_id} is a free client. No notification is sent. ")
+        return True, True
     if credits_count > 0:
         # ---------------------plan chinobo---------------------
         if credits_count == FREE_RESPONSES:
