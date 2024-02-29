@@ -147,9 +147,9 @@ def _send_message_base(client_id, chat_id, message, version):
     r = requests.post(os.getenv('WEBAPI_URL'), headers=headers, json=payload)
     if r.status_code == 200:
         logger.info(f"200 -> {r.text}")
-        return
+        return {'message': 'success'}
     logger.error(f'{r.status_code} -> {r.text}')
-    return None
+    return {'error': r.status_code}
 
 
 def send_message_base(client_id, chat_id, message, version, session_id, role):
@@ -171,9 +171,13 @@ def send_message_base(client_id, chat_id, message, version, session_id, role):
          'session_id': session_id,
          'client_id': client_id,
          'message_id': "",  # will look for a uniform way to get this
-         'success': not send_resp['error'] if 'error' in send_resp else False
+
          }
     ]
+    if send_resp:
+        new_msgs[0]['success'] = not send_resp['error'] if 'error' in send_resp else False
+    else:
+        new_msgs[0]['success'] = 'Unknown'
     save_messages(new_msgs)
     return send_resp
 
