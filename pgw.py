@@ -167,6 +167,9 @@ def handle_pay_prompt(msisdn, text, client_id, version):
     elif country_code == 265:
         handle_payment_malawi(msisdn=msisdn, client_id=client_id, version=version)
 
+    elif country_code == 255:
+        handle_payment_tanzania(msisdn=msisdn, client_id=client_id, version=version)
+
 
 def extract_details(message):
     message = message.replace("\\n", "")
