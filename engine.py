@@ -116,6 +116,9 @@ def notify_depleted_free_responses(msisdn, client_id, version):
         # notify the user that their credits have depleted or expired
         logger.info(f"user ({msisdn}) Credits have been depleted. Notifying user using client id: {client_id}")
         currency = get_upgrade_amount(msisdn)
+        if not currency:
+            logger.info(f"cannot notify this user: {msisdn}")
+            return
         content = DEPLETED_CREDITS_MESSAGE.format(
             default_number=msisdn,
             upgrade_amount=currency.amount,
