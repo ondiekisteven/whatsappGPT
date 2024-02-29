@@ -12,7 +12,7 @@ from flask_restless import APIManager
 from rq import Queue, Retry
 
 import crud
-from constants import PAYMENT_RECEIVED_MESSAGE, BOT_NUMBERS, paymentsq, confg, PAID
+from constants import PAYMENT_RECEIVED_MESSAGE, BOT_NUMBERS, paymentsq, confg, PAID, default
 from db import db, StkWaiting, MpesaPayment, MalawiPayment, ReceivedSMS, User, Message
 from engine import r, handle_prompt
 from helpers import send_notification, get_session_id, add_paid, parse_msisdn, add_simulated_msg_id, \
@@ -282,7 +282,7 @@ def index():
             if os.getenv('ENVIRONMENT', 'development') == 'development':
                 handle_referral_msg(d, 1)
             else:
-                paymentsq.enqueue(handle_referral_msg, args=(d, 1))
+                default.enqueue(handle_referral_msg, args=(d, 1))
 
             # q.enqueue(handle_referral_msg, args=(d, 1))
             # handle_referral_msg(d)
@@ -304,14 +304,14 @@ def index():
             if os.getenv('ENVIRONMENT', 'development') == 'development':
                 handle_getting_code(d, 1)
             else:
-                paymentsq.enqueue(handle_getting_code, args=(d, 1))
+                default.enqueue(handle_getting_code, args=(d, 1))
 
             # q.enqueue(handle_getting_code, args=(d, 1))
         else:
             if os.getenv('ENVIRONMENT', 'development') == 'development':
                 handle_prompt(**kwargs)
             else:
-                paymentsq.enqueue(handle_prompt, kwargs=kwargs, retry=Retry(max=4, interval=60))
+                default.enqueue(handle_prompt, kwargs=kwargs, retry=Retry(max=4, interval=60))
 
             # q.enqueue(handle_prompt, kwargs=kwargs, retry=Retry(max=4, interval=60))
     else:
