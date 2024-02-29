@@ -163,7 +163,7 @@ def send_message_base(client_id, chat_id, message, version, session_id, role):
         logger.info(f'client_id after override: {client_id}')
 
     send_resp: dict = _send_message_base(client_id, chat_id, message, version)
-
+    logger.info(f"SEND RESPONSE: {send_resp}")
     new_msgs = [
         {'role': role,
          'content': message,
