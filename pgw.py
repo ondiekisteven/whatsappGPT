@@ -1,11 +1,8 @@
 import json
-import os
 import re
-from datetime import datetime, timedelta
+import uuid
+from datetime import timedelta
 
-import requests
-
-import crud
 from constants import *
 from db import *
 from helpers import *
@@ -168,7 +165,8 @@ def handle_pay_prompt(msisdn, text, client_id, version):
         handle_payment_malawi(msisdn=msisdn, client_id=client_id, version=version)
 
     elif country_code == 255:
-        handle_payment_tanzania(msisdn=msisdn, client_id=client_id, version=version)
+        handle_payment_tanzania(msisdn=msisdn, client_id=client_id, version=version, email=f"{msisdn}@somwaki.com",
+                                trx_ref=uuid.uuid4().hex)
 
 
 def extract_details(message):
