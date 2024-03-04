@@ -59,7 +59,7 @@ def handle_payment_kenya(msisdn, payment_no, client_id, version=2):
             client_id, msisdn), 'notification'))
 
 
-def handle_payment_tanzania(msisdn, client_id, email, trx_ref, version=2):
+def handle_payment_tanzania(msisdn, client_id, email, trx_ref, network, version=2):
     currency = get_upgrade_amount(msisdn)
 
     crud.save_tanzania_waiting(
@@ -71,6 +71,24 @@ def handle_payment_tanzania(msisdn, client_id, email, trx_ref, version=2):
 
     high.enqueue(send_message_base, args=(client_id, msisdn, resp_msg, version, get_session_id(
         client_id, msisdn), 'notification'))
+
+    url = 'https://api.flutterwave.com/v3/charges?type=mobile_money_tanzania'
+    headers = {
+        'Authorization': 'Bearer FLWSECK-3ad88b0119820d5199f5a3fe93c5783d-18ce93ac61cvt-X'
+    }
+    amount = get_upgrade_amount(msisdn)
+    body = {
+        "tx_ref": trx_ref,
+        "amount": amount.amount,
+        "currency": "TZS",
+        "network": network,
+        "email": email,
+        "phone_number": msisdn,
+        "fullname": msisdn
+    }
+
+    resp = requests.post(url, headers=headers, json=body)
+    logger.info(f"TZ STK PUSH: {resp.text}")
 
 
 def initiate_payment_malawi(trx_ref, amount, network, email, phone, name, token, currency='MWK', url=None):
@@ -110,9 +128,25 @@ def initiate_payment_malawi(trx_ref, amount, network, email, phone, name, token,
     logger.info(f"Unsuccessful response: {resp.status_code} -> {resp.text}")
 
 
+def handle_payment_malawi_send_money(msisdn, client_id, version=2):
+    currency = get_upgrade_amount(msisdn)
+
+    crud.save_malawi_waiting(msisdn, client_id, currency.amount, target=msisdn, version=version)
+
+    resp_msg = MALAWI_PAYMENT_REQUESTED_MESSAGE.format(
+        upgrade_amount=currency.amount,
+        receiving_number='265884749249',
+        receiving_name='Clara Banda'
+    )
+    high.enqueue(send_message_base, args=(client_id, msisdn, resp_msg, version, get_session_id(
+        client_id, msisdn), 'notification'))
+
+
 def handle_payment_malawi(msisdn, client_id, version=2):
     currency = get_upgrade_amount(msisdn)
 
+    if msisdn[3] == '8':
+        return handle_payment_malawi_send_money(msisdn, client_id, version)
     trx_ref = f"MLW-{str(datetime.now().timestamp()).split('.')[0]}-{msisdn}"
     network = malawi_network_mapping.get(msisdn[3])
 
@@ -166,7 +200,7 @@ def handle_pay_prompt(msisdn, text, client_id, version):
 
     elif country_code == 255:
         handle_payment_tanzania(msisdn=msisdn, client_id=client_id, version=version, email=f"{msisdn}@somwaki.com",
-                                trx_ref=uuid.uuid4().hex)
+                                trx_ref=uuid.uuid4().hex, network='Airtel')
 
 
 def extract_details(message):

@@ -88,13 +88,9 @@ We have sent an stk push to the number: {phone_number} Kindly enter your mpesa p
 Thanks for using Sonia AI
 """
 
-MALAWI_PAYMENT_REQUESTED_MESSAGE = """ANNOUNCEMENT!!!!!!!!!
+MALAWI_PAYMENT_REQUESTED_MESSAGE = """To pay, please send MWK {upgrade_amount} to this phone number: +{receiving_number} ({receiving_name}).
 
-DO NOT SEND MONEY TO ANY AIRTEL OR MPAMBA NUMBER. WE ARE WORKING ON A NEW PAYMENT METHOD. 
-WE WILL UPDATE BEFORE END OF DAY. 
-IF YOU SEND MONEY, IT WILL GET LOST. 
-
-Contact customer care for assistance +254742976667
+Thank you for using Sonia AI!
 """
 
 MALAWI_PAYMENT_REQUESTED_MESSAGE_V2 = """Payment Initiated. You will receive a message on your whatsapp and sms from *Flutterwave*. 
