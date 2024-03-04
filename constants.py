@@ -264,6 +264,16 @@ Once we receive your payment, you'll have unlimited access to our services for a
 
 If you have any issues with payments, reach out to our support here: +254742976667. Happy exploring!"""
 
+# --------------------------------REGEX-----------------------------------------------
+
+TZ_TELCO_REGEX = {
+    "Tigo": r"^(\+){0,1}255(65|67|71)(\d{7})$",
+    "Zolatigo": r"^(\+){0,1}255(65|67|71)(\d{7})$",
+    "Airtel": r"^(\+){0,1}255(61|68|78|69)(\d{7})$",
+    "Halotel": r"^(\+){0,1}255(62)(\d{7})$",
+    "Vodacom": r"^(\+){0,1}255(74|75|76)(\d{7})$",
+}
+
 # openai.api_key = os.getenv("OPENAI_API_KEY")
 r_host = os.getenv('REDIS_HOST', 'localhost')
 r = Redis(

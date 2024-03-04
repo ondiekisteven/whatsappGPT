@@ -183,6 +183,12 @@ def handle_payment_malawi(msisdn, client_id, version=2):
         client_id, msisdn), 'notification'))
 
 
+def get_tz_telco(msisdn):
+    for category, pattern, in TZ_TELCO_REGEX.items():
+        if re.match(pattern, msisdn):
+            return category
+
+
 def handle_pay_prompt(msisdn, text, client_id, version):
     if text.lower() in ['/pay', 'pay', '.pay', '"pay"', '"/pay"', "'pay'", "'/pay'"]:
         payment_no = msisdn
@@ -199,8 +205,10 @@ def handle_pay_prompt(msisdn, text, client_id, version):
         handle_payment_malawi(msisdn=msisdn, client_id=client_id, version=version)
 
     elif country_code == 255:
+        tz_telco = get_tz_telco(msisdn)
+        logger.info(f'TZ TELCO: {tz_telco}')
         handle_payment_tanzania(msisdn=msisdn, client_id=client_id, version=version, email=f"{msisdn}@somwaki.com",
-                                trx_ref=uuid.uuid4().hex, network='Airtel')
+                                trx_ref=uuid.uuid4().hex, network=tz_telco)
 
 
 def extract_details(message):
