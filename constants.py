@@ -292,8 +292,8 @@ paymentsq = Queue('payments', connection=r)
 
 currency_obj = namedtuple('currency_obj', ('symbol', 'amount'))
 phones_mapping = {
-    '9': ('265992641392', 'Dolika Nkhoma'),
-    '8': ('265884749249', 'Clara Banda'),
+    '9': ('265993010331', 'Happy Sabao'),
+    '8': ('265887997005', 'Happy Sabao'),
 }
 
 malawi_network_mapping = {

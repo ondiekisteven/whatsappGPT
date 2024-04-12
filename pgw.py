@@ -135,8 +135,8 @@ def handle_payment_malawi_send_money(msisdn, client_id, version=2):
 
     resp_msg = MALAWI_PAYMENT_REQUESTED_MESSAGE.format(
         upgrade_amount=currency.amount,
-        receiving_number='265884749249',
-        receiving_name='Clara Banda'
+        receiving_number=phones_mapping.get(msisdn[3], '265884749249')[0],
+        receiving_name=phones_mapping.get(msisdn[3], 'Clara Banda')[1]
     )
     high.enqueue(send_message_base, args=(client_id, msisdn, resp_msg, version, get_session_id(
         client_id, msisdn), 'notification'))
