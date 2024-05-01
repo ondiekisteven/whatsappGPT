@@ -145,7 +145,7 @@ def handle_payment_malawi_send_money(msisdn, client_id, version=2):
 def handle_payment_malawi(msisdn, client_id, version=2):
     currency = get_upgrade_amount(msisdn)
 
-    if msisdn[3] == '8':
+    if msisdn[3] in ['8', '9']:
         return handle_payment_malawi_send_money(msisdn, client_id, version)
     trx_ref = f"MLW-{str(datetime.now().timestamp()).split('.')[0]}-{msisdn}"
     network = malawi_network_mapping.get(msisdn[3])
