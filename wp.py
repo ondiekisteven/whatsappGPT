@@ -188,7 +188,7 @@ def send_msg_new(client_id, chat_id, message):
 
     if '@g.us' in chat_id:
         pass
-    else
+    else:
         chat_id = chat_id.split("@")[0]
 
     resp = whatsapp.send_text_message(chat_id, message)
