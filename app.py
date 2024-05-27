@@ -211,12 +211,16 @@ def payment_view():
                 logger.info(f"CURRENT EXPIRY: {current_expiry}")
                 try:
                     current_expiry_datetime = datetime.fromtimestamp(int(current_expiry))
-                except: 
+                    logger.info(f"current expiry datetime: {current_expiry_datetime}")
+                except Exception as x: 
                     pass
+                    logger.exception(x)
                 else: 
                     if current_expiry_datetime > datetime.now(): 
                         logger.info("User already has a future expiry. Extending that.")
                         expiry = current_expiry_datetime + timedelta(days=30)
+                    else:
+                        logger.info(f"Current expiry datetime [{current_expiry_datetime}] is not greater than now [{datetime.now()}]")
             add_paid(target, expiry.timestamp())
             logger.info(f"Sending notification to {target} using {client_id}")
             send_notification(
