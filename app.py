@@ -206,6 +206,12 @@ def payment_view():
                                          x in req['Body']['stkCallback']['CallbackMetadata']['Item']
                                          if x['Name'] == 'TransactionDate'][0]), '%Y%m%d%H%M%S')
             expiry = now + timedelta(days=30)
+            current_expiry = get_user_expiry(target)
+            if current_expiry:
+                current_expiry_datetime = datetime.fromtimestamp(currency)
+                if current_expiry_datetime > datetime.now(): 
+                    logger.info("User already has a future expiry. Extending that.")
+                    expiry = current_expiry_datetime + timedelta(days=30)
             add_paid(target, expiry.timestamp())
             logger.info(f"Sending notification to {target} using {client_id}")
             send_notification(
@@ -220,6 +226,24 @@ def payment_view():
                     expiry=expiry.strftime("%d/%m/%Y, %H:%M")
                 )
             )
+            # sending notification to payments group
+            msg = "{} --> {}".format(
+                payment.msisdn,
+                MALAWI_PAYMENT_RECEIVED_MESSAGE.format(
+                    amount=payment.amount,
+                    msisdn=payment.msisdn,
+                    trx_id=payment.trx_id,
+                    expiry=expiry.strftime("%d/%m/%Y, %H:%M")
+                )
+            )
+            send_notification(
+                client_id,
+                '120363284516165905@g.us',
+                version,
+                get_session_id(client_id, payment.msisdn),
+                msg
+            )
+
         except Exception as x:
             logger.exception(x)
             logger.warning('A Db Error Occurred when saving payment. ')

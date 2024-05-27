@@ -186,7 +186,12 @@ def send_msg_new(client_id, chat_id, message):
     url = os.getenv('V2_BASE_URL', 'http://new_whatsapp:3333')
     whatsapp = V2Whatsapp(base_url=url, key=client_id)
 
-    resp = whatsapp.send_text_message(chat_id.split("@")[0], message)
+    if '@g.us' in chat_id:
+        pass
+    else
+        chat_id = chat_id.split("@")[0]
+
+    resp = whatsapp.send_text_message(chat_id, message)
     logger.info(f'{resp.status_code} -> {resp.text}')
     try:
         json_resp = json.loads(resp.text)
