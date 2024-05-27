@@ -16,7 +16,7 @@ from constants import PAYMENT_RECEIVED_MESSAGE, BOT_NUMBERS, paymentsq, confg, P
 from db import db, StkWaiting, MpesaPayment, MalawiPayment, ReceivedSMS, User, Message
 from engine import r, handle_prompt
 from helpers import send_notification, get_session_id, add_paid, parse_msisdn, add_simulated_msg_id, \
-    handle_referral_msg, handle_getting_code, handle_lesson_subscription, handle_save_user
+    handle_referral_msg, handle_getting_code, handle_lesson_subscription, handle_save_user, get_user_expiry
 from pgw import handle_pay_prompt, handle_malawi_sms, handle_flutterwave_webhook
 from schema import PaymentBase
 
