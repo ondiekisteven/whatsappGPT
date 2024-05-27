@@ -208,10 +208,15 @@ def payment_view():
             expiry = now + timedelta(days=30)
             current_expiry = get_user_expiry(target)
             if current_expiry:
-                current_expiry_datetime = datetime.fromtimestamp(current_expiry)
-                if current_expiry_datetime > datetime.now(): 
-                    logger.info("User already has a future expiry. Extending that.")
-                    expiry = current_expiry_datetime + timedelta(days=30)
+                logger.info(f"CURRENT EXPIRY: {current_expiry}")
+                try:
+                    current_expiry_datetime = datetime.fromtimestamp(int(current_expiry))
+                except: 
+                    pass
+                else: 
+                    if current_expiry_datetime > datetime.now(): 
+                        logger.info("User already has a future expiry. Extending that.")
+                        expiry = current_expiry_datetime + timedelta(days=30)
             add_paid(target, expiry.timestamp())
             logger.info(f"Sending notification to {target} using {client_id}")
             send_notification(
