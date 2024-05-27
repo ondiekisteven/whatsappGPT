@@ -210,7 +210,7 @@ def payment_view():
             if current_expiry:
                 logger.info(f"CURRENT EXPIRY: {current_expiry}")
                 try:
-                    current_expiry_datetime = datetime.fromtimestamp(int(current_expiry))
+                    current_expiry_datetime = datetime.fromtimestamp(int(float(current_expiry)))
                     logger.info(f"current expiry datetime: {current_expiry_datetime}")
                 except Exception as x: 
                     pass

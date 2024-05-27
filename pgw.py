@@ -290,7 +290,7 @@ def handle_malawi_sms(from_, text, sent, received, sim):
         if current_expiry:
             logger.info(f"CURRENT EXPIRY: {current_expiry}")
             try:
-                current_expiry_datetime = datetime.fromtimestamp(int(current_expiry))
+                current_expiry_datetime = datetime.fromtimestamp(int(float(current_expiry)))
             except: 
                 pass
             else: 
@@ -387,7 +387,7 @@ def handle_malawi_webhook(phone_number, amount, status, trx_ref, data, event_typ
         if current_expiry:
             logger.info(f"CURRENT EXPIRY: {current_expiry}")
             try:
-                current_expiry_datetime = datetime.fromtimestamp(int(current_expiry))
+                current_expiry_datetime = datetime.fromtimestamp(int(float(current_expiry)))
             except: 
                 pass
             else: 
@@ -475,7 +475,7 @@ def handle_tanzania_webhook(phone_number, amount, status, trx_ref, data, event_t
         if current_expiry:
             logger.info(f"CURRENT EXPIRY: {current_expiry}")
             try:
-                current_expiry_datetime = datetime.fromtimestamp(int(current_expiry))
+                current_expiry_datetime = datetime.fromtimestamp(int(float(current_expiry)))
             except: 
                 pass
             else: 
