@@ -288,7 +288,7 @@ def handle_malawi_sms(from_, text, sent, received, sim):
         expiry = datetime.now() + timedelta(days=30)
         current_expiry = get_user_expiry(target)
         if current_expiry:
-            current_expiry_datetime = datetime.fromtimestamp(currency)
+            current_expiry_datetime = datetime.fromtimestamp(current_expiry)
             if current_expiry_datetime > datetime.now(): 
                 logger.info("User already has a future expiry. Extending that.")
                 expiry = current_expiry_datetime + timedelta(days=30)
@@ -380,7 +380,7 @@ def handle_malawi_webhook(phone_number, amount, status, trx_ref, data, event_typ
         expiry = datetime.now() + timedelta(days=30)
         current_expiry = get_user_expiry(target)
         if current_expiry:
-            current_expiry_datetime = datetime.fromtimestamp(currency)
+            current_expiry_datetime = datetime.fromtimestamp(current_expiry)
             if current_expiry_datetime > datetime.now(): 
                 logger.info("User already has a future expiry. Extending that.")
                 expiry = current_expiry_datetime + timedelta(days=30)
@@ -463,7 +463,7 @@ def handle_tanzania_webhook(phone_number, amount, status, trx_ref, data, event_t
         expiry = datetime.now() + timedelta(days=30)
         current_expiry = get_user_expiry(target)
         if current_expiry:
-            current_expiry_datetime = datetime.fromtimestamp(currency)
+            current_expiry_datetime = datetime.fromtimestamp(current_expiry)
             if current_expiry_datetime > datetime.now(): 
                 logger.info("User already has a future expiry. Extending that.")
                 expiry = current_expiry_datetime + timedelta(days=30)
