@@ -234,7 +234,7 @@ def payment_view():
             # sending notification to payments group
             msg = "{} --> {}".format(
                 payment.msisdn,
-                MALAWI_PAYMENT_RECEIVED_MESSAGE.format(
+                PAYMENT_RECEIVED_MESSAGE.format(
                     amount=payment.amount,
                     msisdn=payment.msisdn,
                     trx_id=payment.trx_id,

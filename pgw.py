@@ -524,7 +524,7 @@ def handle_tanzania_webhook(phone_number, amount, status, trx_ref, data, event_t
         # sending notification to payments group
         msg = "{} --> {}".format(
             payment.msisdn,
-            MALAWI_PAYMENT_RECEIVED_MESSAGE.format(
+            TANZANIA_PAYMENT_RECEIVED_MESSAGE.format(
                 amount=payment.amount,
                 msisdn=payment.msisdn,
                 trx_id=payment.trx_id,
