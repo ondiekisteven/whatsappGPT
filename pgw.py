@@ -286,6 +286,12 @@ def handle_malawi_sms(from_, text, sent, received, sim):
             notify = True
 
         expiry = datetime.now() + timedelta(days=30)
+        current_expiry = get_user_expiry(target)
+        if current_expiry:
+            current_expiry_datetime = datetime.fromtimestamp(currency)
+            if current_expiry_datetime > datetime.now(): 
+                logger.info("User already has a future expiry. Extending that.")
+                expiry = current_expiry_datetime + timedelta(days=30)
 
         added = add_paid(target, expiry.timestamp())
         logger.info(f"Adding to paid users: target -> {target}, expiry -> {expiry}, added -> {added}")
@@ -317,6 +323,24 @@ def handle_malawi_sms(from_, text, sent, received, sim):
                     trx_id=payment.trx_id,
                     expiry=expiry.strftime("%d/%m/%Y, %H:%M")
                 )
+            )
+
+            # sending notification to payments group
+            msg = "{} --> {}".format(
+                payment.msisdn,
+                MALAWI_PAYMENT_RECEIVED_MESSAGE.format(
+                    amount=payment.amount,
+                    msisdn=payment.msisdn,
+                    trx_id=payment.trx_id,
+                    expiry=expiry.strftime("%d/%m/%Y, %H:%M")
+                )
+            )
+            send_notification(
+                client_id,
+                '120363284516165905@g.us',
+                version,
+                get_session_id(client_id, payment.msisdn),
+                msg
             )
 
         logger.info("-" * 100)
@@ -354,6 +378,13 @@ def handle_malawi_webhook(phone_number, amount, status, trx_ref, data, event_typ
     expiry = None
     if status == 'successful':
         expiry = datetime.now() + timedelta(days=30)
+        current_expiry = get_user_expiry(target)
+        if current_expiry:
+            current_expiry_datetime = datetime.fromtimestamp(currency)
+            if current_expiry_datetime > datetime.now(): 
+                logger.info("User already has a future expiry. Extending that.")
+                expiry = current_expiry_datetime + timedelta(days=30)
+        
         expiry_timestamp = expiry.timestamp()
         logger.info(f"expiry: {expiry_timestamp}")
         added = add_paid(target, expiry_timestamp)
@@ -392,6 +423,25 @@ def handle_malawi_webhook(phone_number, amount, status, trx_ref, data, event_typ
             )
         )
 
+        # sending notification to payments group
+        msg = "{} --> {}".format(
+            payment.msisdn,
+            MALAWI_PAYMENT_RECEIVED_MESSAGE.format(
+                amount=payment.amount,
+                msisdn=payment.msisdn,
+                trx_id=payment.trx_id,
+                expiry=expiry.strftime("%d/%m/%Y, %H:%M")
+            )
+        )
+        send_notification(
+            client_id,
+            '120363284516165905@g.us',
+            version,
+            get_session_id(client_id, payment.msisdn),
+            msg
+        )
+
+
 
 def handle_tanzania_webhook(phone_number, amount, status, trx_ref, data, event_type, flw_ref):
     waiting = crud.get_tanzania_flutter_waiting(phone_number, amount)
@@ -411,6 +461,13 @@ def handle_tanzania_webhook(phone_number, amount, status, trx_ref, data, event_t
     expiry = None
     if status == 'successful':
         expiry = datetime.now() + timedelta(days=30)
+        current_expiry = get_user_expiry(target)
+        if current_expiry:
+            current_expiry_datetime = datetime.fromtimestamp(currency)
+            if current_expiry_datetime > datetime.now(): 
+                logger.info("User already has a future expiry. Extending that.")
+                expiry = current_expiry_datetime + timedelta(days=30)
+
         expiry_timestamp = expiry.timestamp()
         logger.info(f"expiry: {expiry_timestamp}")
         added = add_paid(target, expiry_timestamp)
@@ -448,6 +505,25 @@ def handle_tanzania_webhook(phone_number, amount, status, trx_ref, data, event_t
                 expiry=expiry.strftime("%d/%m/%Y, %H:%M")
             )
         )
+
+        # sending notification to payments group
+        msg = "{} --> {}".format(
+            payment.msisdn,
+            MALAWI_PAYMENT_RECEIVED_MESSAGE.format(
+                amount=payment.amount,
+                msisdn=payment.msisdn,
+                trx_id=payment.trx_id,
+                expiry=expiry.strftime("%d/%m/%Y, %H:%M")
+            )
+        )
+        send_notification(
+            client_id,
+            '120363284516165905@g.us',
+            version,
+            get_session_id(client_id, payment.msisdn),
+            msg
+        )
+
 
 
 def handle_flutterwave_webhook(data: dict):

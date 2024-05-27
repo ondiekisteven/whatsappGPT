@@ -83,6 +83,10 @@ def add_paid(msisdn, expiry):
     return r.hset(PAID, msisdn, str(expiry))
 
 
+def get_user_expiry(msisdn):
+    return r.hget(PAID, msisdn)
+
+
 def add_users(msisdn):
     # Adds user msisdn to list of users on redis
     return r.sadd(USERS, msisdn)
